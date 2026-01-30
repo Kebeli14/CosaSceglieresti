@@ -14,6 +14,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
 import questionsData from "../data/questions.json";
+import { supabase } from '../lib/supabase'
+
 
 interface Question {
   _id: string;
@@ -42,6 +44,23 @@ export default function Game() {
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<"A" | "B" | null>(null);
+
+ useEffect(() => {
+    async function loadFromSupabase() {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+
+      if (error) {
+        console.error('Supabase error:', error)
+      } else {
+        console.log('DATI DA SUPABASE:', data)
+      }
+    }
+
+    loadFromSupabase()
+  }, []);
+
 
   const scaleA = new Animated.Value(1);
   const scaleB = new Animated.Value(1);
