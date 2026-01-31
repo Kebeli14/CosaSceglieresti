@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
 from datetime import datetime
-from emergentintegrations.llm.chat import LlmChat, UserMessage
 from bson import ObjectId
 
 
@@ -194,7 +193,6 @@ async def generate_question(request: GenerateQuestionRequest):
         
         # Call LLM
         chat = LlmChat(
-            api_key=os.environ.get("EMERGENT_LLM_KEY"),
             session_id=f"question-gen-{uuid.uuid4()}",
             system_message="Sei un creatore esperto di domande 'Would You Rather' in italiano. Le tue domande sono creative, coinvolgenti e fanno riflettere."
         ).with_model("openai", "gpt-5.2")

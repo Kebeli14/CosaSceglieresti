@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -13,17 +13,15 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
-import questionsData from "../data/questions.json";
-import { supabase } from '../lib/supabase'
-
+import { supabase } from "../lib/supabase";
 
 interface Question {
-  _id: string;
+  id: string;
   category: string;
-  optionA: string;
-  optionB: string;
-  votesA: number;
-  votesB: number;
+  option_a: string;
+  option_b: string;
+  votes_a: number;
+  votes_b: number;
 }
 
 interface Stats {
@@ -45,78 +43,76 @@ export default function Game() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<"A" | "B" | null>(null);
 
- useEffect(() => {
-    async function loadFromSupabase() {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
+  const scaleA = useRef(new Animated.Value(1)).current;
+  const scaleB = useRef(new Animated.Value(1)).current;
+  const statsOpacity = useRef(new Animated.Value(0)).current;
 
-      if (error) {
-        console.error('Supabase error:', error)
-      } else {
-        console.log('DATI DA SUPABASE:', data)
-      }
-    }
-
-    loadFromSupabase()
-  }, []);
-
-
-  const scaleA = new Animated.Value(1);
-  const scaleB = new Animated.Value(1);
-  const statsOpacity = new Animated.Value(0);
-
-  useEffect(() => {
-    loadQuestions();
-  }, [category]);
-
-  const loadQuestions = () => {
+  // Funzione per caricare domande da Supabase
+  const loadQuestions = async () => {
     setLoading(true);
     try {
-      if (category && questionsData[category]) {
-        setQuestions(questionsData[category]);
-      } else {
-        Alert.alert("Errore", "Categoria non trovata.");
+      const { data, error } = await supabase
+        .from("questions")
+        .select("*")
+        .eq("category", category);
+
+      if (error) {
+        console.error(error);
+        Alert.alert("Errore", "Impossibile caricare le domande");
         setQuestions([]);
+      } else {
+        setQuestions(data ?? []);
       }
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Errore", "Impossibile caricare le domande.");
+    } catch (err) {
+      console.error(err);
       setQuestions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChoice = (choice: "A" | "B") => {
+  useEffect(() => {
+    loadQuestions();
+  }, [category]);
+
+  // Funzione per gestire la scelta dell'utente
+  const handleChoice = async (choice: "A" | "B") => {
     if (showStats) return;
 
     vibrate("medium");
     setSelectedChoice(choice);
 
-    const currentQuestion = questions[currentIndex];
+    const q = questions[currentIndex];
+    const updates =
+      choice === "A" ? { votes_a: q.votes_a + 1 } : { votes_b: q.votes_b + 1 };
 
-    // Aggiorna i voti
-    if (choice === "A") currentQuestion.votesA += 1;
-    else currentQuestion.votesB += 1;
+    const { error } = await supabase
+      .from("questions")
+      .update(updates)
+      .eq("id", q.id);
 
-    const totalVotes = currentQuestion.votesA + currentQuestion.votesB;
-    const statsData: Stats = {
-      votesA: currentQuestion.votesA,
-      votesB: currentQuestion.votesB,
-      percentageA: (currentQuestion.votesA / totalVotes) * 100,
-      percentageB: (currentQuestion.votesB / totalVotes) * 100,
-    };
+    if (error) {
+      console.error(error);
+      Alert.alert("Errore", "Impossibile salvare il voto");
+      return;
+    }
 
-    setStats(statsData);
+    const updated = { ...q, ...updates };
+    const newQuestions = [...questions];
+    newQuestions[currentIndex] = updated;
+    setQuestions(newQuestions);
+
+    const totalVotes = updated.votes_a + updated.votes_b;
+    setStats({
+      votesA: updated.votes_a,
+      votesB: updated.votes_b,
+      percentageA: (updated.votes_a / totalVotes) * 100,
+      percentageB: (updated.votes_b / totalVotes) * 100,
+    });
+
     setShowStats(true);
-    Animated.timing(statsOpacity, {
-  toValue: 1,
-  duration: 250,
-  useNativeDriver: true,
-}).start();
 
-
+    // Animazione
     const scale = choice === "A" ? scaleA : scaleB;
     Animated.sequence([
       Animated.timing(scale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
@@ -159,7 +155,9 @@ export default function Game() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>Caricamento domande...</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            Caricamento domande...
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -197,8 +195,10 @@ export default function Game() {
         </Text>
       </View>
 
-      {/* Game Area: cliccando sullo schermo passa alla prossima domanda */}
-      <Pressable style={styles.gameContainer} onPress={showStats ? handleNext : undefined}
+      {/* Game Area */}
+      <Pressable
+        style={styles.gameContainer}
+        onPress={showStats ? handleNext : undefined}
       >
         {/* Option A */}
         <Animated.View style={[styles.optionWrapper, { transform: [{ scale: scaleA }] }]}>
@@ -213,13 +213,16 @@ export default function Game() {
             disabled={showStats}
             activeOpacity={0.8}
           >
-            <Text style={[styles.optionText, { color: colors.text }]}>{currentQuestion.optionA}</Text>
+            <Text style={[styles.optionText, { color: colors.text }]}>
+              {currentQuestion.option_a}
+            </Text>
             {showStats && stats && (
-            <View style={styles.statsOverlay}>
-          <Text style={styles.percentageText}>{stats.percentageA.toFixed(1)}%</Text>
-        </View>
-      )}
-
+              <View style={styles.statsOverlay}>
+                <Text style={styles.percentageText}>
+                  {stats.percentageA.toFixed(1)}%
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </Animated.View>
 
@@ -241,13 +244,16 @@ export default function Game() {
             disabled={showStats}
             activeOpacity={0.8}
           >
-            <Text style={[styles.optionText, { color: colors.text }]}>{currentQuestion.optionB}</Text>
+            <Text style={[styles.optionText, { color: colors.text }]}>
+              {currentQuestion.option_b}
+            </Text>
             {showStats && stats && (
-            <View style={styles.statsOverlay}>
-            <Text style={styles.percentageText}>{stats.percentageB.toFixed(1)}%</Text>
-          </View>
-          )}
-
+              <View style={styles.statsOverlay}>
+                <Text style={styles.percentageText}>
+                  {stats.percentageB.toFixed(1)}%
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </Animated.View>
       </Pressable>
@@ -257,25 +263,62 @@ export default function Game() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
   backIcon: { width: 40 },
   headerTitle: { fontSize: 18, fontWeight: "700", flex: 1, textAlign: "center" },
-  headerRight: { width: 40, alignItems: "flex-end" },
-  questionCounter: { fontSize: 16, fontWeight: "600" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
   loadingText: { fontSize: 18, marginTop: 16, textAlign: "center" },
   gameContainer: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
   optionWrapper: { marginVertical: 12 },
-  optionButton: { minHeight: 180, borderRadius: 24, padding: 24, justifyContent: "center", alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4, borderWidth: 3, borderColor: "transparent" },
+  optionButton: {
+    minHeight: 180,
+    borderRadius: 24,
+    padding: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 3,
+    borderColor: "transparent",
+  },
   optionA: {},
   optionB: {},
   selectedOption: { borderColor: "#4ade80" },
   optionText: { fontSize: 22, fontWeight: "700", textAlign: "center", lineHeight: 32 },
-  orCircle: { width: 64, height: 64, borderRadius: 32, alignSelf: "center", justifyContent: "center", alignItems: "center", marginVertical: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
+  orCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   orText: { fontSize: 28, fontWeight: "800", color: "#FFFFFF" },
-  statsOverlay: { marginTop: 16, paddingTop: 16, borderTopWidth: 2, borderTopColor: "rgba(255,255,255,0.2)", width: "100%", alignItems: "center" },
+  statsOverlay: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 2,
+    borderTopColor: "rgba(255,255,255,0.2)",
+    width: "100%",
+    alignItems: "center",
+  },
   percentageText: { fontSize: 36, fontWeight: "800", color: "#4ade80" },
-  votesText: { fontSize: 16, color: "#9ca3af", marginTop: 4 },
   backButton: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
   backButtonText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
 });
