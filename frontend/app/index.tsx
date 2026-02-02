@@ -82,6 +82,7 @@ export default function Index() {
 
       {/* MODALITÀ */}
       <View style={{ paddingHorizontal: 20, gap: 20 }}>
+        {/* Modalità Classica */}
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push("/categories")}
@@ -90,13 +91,19 @@ export default function Index() {
             colors={["#2563eb", "#3b82f6"]}
             style={styles.modeButton}
           >
-            <Text style={styles.modeTitle}>Modalità Classica</Text>
-            <Text style={styles.modeSubtitle}>
-              Scegli la tua opzione preferita tra le categorie disponibili
-            </Text>
+            <View style={styles.modeContent}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeTitle}>Modalità Classica</Text>
+                <Text style={styles.modeSubtitle}>
+                  Scegli la tua opzione preferita tra le categorie disponibili
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
+            </View>
           </LinearGradient>
         </TouchableOpacity>
 
+        {/* Indovina l'opzione più votata */}
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push("/popular")}
@@ -105,13 +112,19 @@ export default function Index() {
             colors={["#16a34a", "#22c55e"]}
             style={styles.modeButton}
           >
-            <Text style={styles.modeTitle}>Indovina l'opzione più votata</Text>
-            <Text style={styles.modeSubtitle}>
-              Prova a indovinare cosa hanno scelto più utenti
-            </Text>
+            <View style={styles.modeContent}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeTitle}>Indovina l'opzione più votata</Text>
+                <Text style={styles.modeSubtitle}>
+                  Prova a indovinare cosa hanno scelto più utenti
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
+            </View>
           </LinearGradient>
         </TouchableOpacity>
 
+        {/* Sfida un amico */}
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push("/friend")}
@@ -120,13 +133,19 @@ export default function Index() {
             colors={["#f59e0b", "#fbbf24"]}
             style={styles.modeButton}
           >
-            <Text style={styles.modeTitle}>Sfida un amico</Text>
-            <Text style={styles.modeSubtitle}>
-              Sfida un amico e indovina le sue preferenze
-            </Text>
+            <View style={styles.modeContent}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeTitle}>Sfida un amico</Text>
+                <Text style={styles.modeSubtitle}>
+                  Sfida un amico e indovina le sue preferenze
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
+            </View>
           </LinearGradient>
         </TouchableOpacity>
 
+        {/* Chi sei? */}
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push("/profile")}
@@ -135,10 +154,15 @@ export default function Index() {
             colors={["#8b5cf6", "#a78bfa"]}
             style={styles.modeButton}
           >
-            <Text style={styles.modeTitle}>Chi sei?</Text>
-            <Text style={styles.modeSubtitle}>
-              Scopri il tuo profilo di personalità
-            </Text>
+            <View style={styles.modeContent}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeTitle}>Chi sei?</Text>
+                <Text style={styles.modeSubtitle}>
+                  Scopri il tuo profilo di personalità
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
+            </View>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -173,6 +197,11 @@ const styles = StyleSheet.create({
   modeButton: {
     padding: 28,
     borderRadius: 22,
+  },
+  modeContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   modeTitle: {
     color: "#fff",

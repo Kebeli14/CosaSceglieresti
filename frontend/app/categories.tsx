@@ -27,10 +27,10 @@ const categories: Category[] = [
   {
     id: "divertente",
     name: "Divertente",
-    icon: "emoticon-happy", // icona sorridente per divertimento
+    icon: "sentiment-satisfied", // faccina buffa
     iconFamily: "material",
-    color: "#facc15", // giallo solare
-    gradient: ["#facc15", "#fbbf24"], // giallo sfumato
+    color: "#facc15",
+    gradient: ["#facc15", "#fbbf24"],
   },
   {
     id: "sport",
@@ -106,7 +106,30 @@ export default function Categories() {
         barStyle={colors.background === "#000000" ? "light-content" : "dark-content"}
       />
       
-      
+      {/* Header */}
+<View style={styles.header}>
+  {/* Freccia indietro */}
+  <TouchableOpacity
+    style={styles.headerLeft}
+    onPress={() => router.back()}
+    activeOpacity={0.7}
+  >
+    <Ionicons name="arrow-back" size={28} color={colors.text} />
+  </TouchableOpacity>
+
+  <Text style={[styles.title, { color: colors.text }]}>
+    Cosa Sceglieresti?
+  </Text>
+
+  <TouchableOpacity
+    style={styles.headerRight}
+    onPress={handleSettingsPress}
+    activeOpacity={0.7}
+  >
+    <Ionicons name="settings-outline" size={28} color={colors.text} />
+  </TouchableOpacity>
+</View>
+
 
       {/* Subtitle */}
       <View style={styles.subtitleContainer}>
@@ -148,12 +171,9 @@ export default function Categories() {
         ))}
       </ScrollView>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-          Tocca una categoria per iniziare
-        </Text>
-      </View>
+      {/* Footer vuoto, senza testo */}
+      <View style={styles.footer} />
+
     </SafeAreaView>
   );
 }
