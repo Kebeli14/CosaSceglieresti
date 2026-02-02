@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useSettings } from "../contexts/SettingsContext";
+import { useSettings } from "./contexts/SettingsContext";
 
 export default function Settings() {
   const router = useRouter();

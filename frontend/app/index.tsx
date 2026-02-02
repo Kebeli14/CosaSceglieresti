@@ -1,184 +1,153 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
-  ScrollView,
+  TouchableOpacity,
   StatusBar as RNStatusBar,
-  Animated,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { useSettings } from "../contexts/SettingsContext";
+import { Ionicons } from "@expo/vector-icons";
+import { useSettings } from "./contexts/SettingsContext";
 import { LinearGradient } from "expo-linear-gradient";
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  iconFamily: "material" | "fontawesome" | "ionicons";
-  color: string;
-  gradient: string[];
-}
-
-const categories: Category[] = [
-  {
-    id: "storico",
-    name: "Storico",
-    icon: "account-balance",
-    iconFamily: "material",
-    color: "#1e3a8a",
-    gradient: ["#1e3a8a", "#3b82f6"],
-  },
-  {
-    id: "calcio",
-    name: "Calcistico",
-    icon: "sports-soccer",
-    iconFamily: "material",
-    color: "#16a34a",
-    gradient: ["#16a34a", "#22c55e"],
-  },
-  {
-    id: "basket",
-    name: "NBA / Basket",
-    icon: "basketball-ball",
-    iconFamily: "fontawesome",
-    color: "#ea580c",
-    gradient: ["#ea580c", "#f97316"],
-  },
-  {
-    id: "religione",
-    name: "Religione",
-    icon: "hands-pray",
-    iconFamily: "fontawesome",
-    color: "#7c3aed",
-    gradient: ["#7c3aed", "#a855f7"],
-  },
-  {
-    id: "random",
-    name: "Random",
-    icon: "shuffle",
-    iconFamily: "material",
-    color: "#ec4899",
-    gradient: ["#ec4899", "#f472b6"],
-  },
-];
 
 export default function Index() {
   const router = useRouter();
   const { colors, vibrate } = useSettings();
+  const [menuVisible, setMenuVisible] = useState(false);
 
-  const handleCategoryPress = (category: Category) => {
+  const toggleMenu = () => {
     vibrate("light");
-    router.push({
-      pathname: "/game",
-      params: { category: category.id },
-    });
+    setMenuVisible(!menuVisible);
   };
 
-  const handleSettingsPress = () => {
-    vibrate("light");
+  const handleSettings = () => {
+    toggleMenu();
     router.push("/settings");
   };
 
-  const renderIcon = (category: Category) => {
-    const iconProps = {
-      size: 48,
-      color: "#FFFFFF",
-    };
-
-    if (category.iconFamily === "material") {
-      return <MaterialIcons name={category.icon as any} {...iconProps} />;
-    } else if (category.iconFamily === "fontawesome") {
-      return <FontAwesome5 name={category.icon as any} {...iconProps} />;
-    } else {
-      return <Ionicons name={category.icon as any} {...iconProps} />;
-    }
+  const handleLogin = () => {
+    toggleMenu();
+    router.push("/contexts/login"); // o funzione di login Google
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <RNStatusBar
         barStyle={colors.background === "#000000" ? "light-content" : "dark-content"}
       />
-      
+
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Ionicons name="menu" size={28} color={colors.text} />
-        </View>
-        
-        <Text style={[styles.title, { color: colors.text }]}>
-          Cosa Sceglieresti?
-        </Text>
-        
-        <TouchableOpacity
-          style={styles.headerRight}
-          onPress={handleSettingsPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="settings-outline" size={28} color={colors.text} />
+        {/* Hamburger */}
+        <TouchableOpacity onPress={toggleMenu} style={styles.headerLeft}>
+          <Ionicons name="menu-outline" size={28} color={colors.text} />
         </TouchableOpacity>
+
+        <Text style={[styles.title, { color: colors.text }]}>Cosa Sceglieresti?</Text>
+
+        <View style={styles.headerRight} />
       </View>
+
+      {/* Menu Hamburger */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={toggleMenu}
+      >
+        <Pressable style={styles.overlay} onPress={toggleMenu}>
+          <View style={[styles.menuContainer, { backgroundColor: colors.cardBackground }]}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogin}>
+              <Ionicons name="log-in-outline" size={22} color={colors.text} />
+              <Text style={[styles.menuText, { color: colors.text }]}>Login Google</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleSettings}>
+              <Ionicons name="settings-outline" size={22} color={colors.text} />
+              <Text style={[styles.menuText, { color: colors.text }]}>Impostazioni</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* Subtitle */}
       <View style={styles.subtitleContainer}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Scegli una categoria e inizia a giocare
+          Scegli la modalità di gioco
         </Text>
       </View>
 
-      {/* Categories */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.categoriesContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {categories.map((category, index) => (
-          <TouchableOpacity
-            key={category.id}
-            activeOpacity={0.8}
-            onPress={() => handleCategoryPress(category)}
-            style={styles.categoryButtonWrapper}
+      {/* MODALITÀ */}
+      <View style={{ paddingHorizontal: 20, gap: 20 }}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push("/categories")}
+        >
+          <LinearGradient
+            colors={["#2563eb", "#3b82f6"]}
+            style={styles.modeButton}
           >
-            <LinearGradient
-              colors={category.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.categoryButton}
-            >
-              <View style={styles.iconContainer}>
-                {renderIcon(category)}
-              </View>
-              <Text style={styles.categoryText}>{category.name}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color="rgba(255,255,255,0.7)"
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            <Text style={styles.modeTitle}>Modalità Classica</Text>
+            <Text style={styles.modeSubtitle}>
+              Scegli la tua opzione preferita tra le categorie disponibili
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-          Tocca una categoria per iniziare
-        </Text>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push("/popular")}
+        >
+          <LinearGradient
+            colors={["#16a34a", "#22c55e"]}
+            style={styles.modeButton}
+          >
+            <Text style={styles.modeTitle}>Indovina l'opzione più votata</Text>
+            <Text style={styles.modeSubtitle}>
+              Prova a indovinare cosa hanno scelto più utenti
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push("/friend")}
+        >
+          <LinearGradient
+            colors={["#f59e0b", "#fbbf24"]}
+            style={styles.modeButton}
+          >
+            <Text style={styles.modeTitle}>Sfida un amico</Text>
+            <Text style={styles.modeSubtitle}>
+              Sfida un amico e indovina le sue preferenze
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push("/profile")}
+        >
+          <LinearGradient
+            colors={["#8b5cf6", "#a78bfa"]}
+            style={styles.modeButton}
+          >
+            <Text style={styles.modeTitle}>Chi sei?</Text>
+            <Text style={styles.modeSubtitle}>
+              Scopri il tuo profilo di personalità
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -187,13 +156,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  headerLeft: {
-    width: 40,
-  },
-  headerRight: {
-    width: 40,
-    alignItems: "flex-end",
-  },
+  headerLeft: { width: 40 },
+  headerRight: { width: 40 },
   title: {
     fontSize: 24,
     fontWeight: "700",
@@ -205,57 +169,43 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     alignItems: "center",
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
+  subtitle: { fontSize: 16, textAlign: "center" },
+  modeButton: {
+    padding: 28,
+    borderRadius: 22,
   },
-  scrollView: {
+  modeTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  modeSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    marginTop: 6,
+    fontSize: 15,
+  },
+  overlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-start",
+    paddingTop: 60,
   },
-  categoriesContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  categoryButtonWrapper: {
-    marginBottom: 16,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+  menuContainer: {
+    width: 220,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginLeft: 20,
     elevation: 5,
   },
-  categoryButton: {
+  menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 24,
-    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
   },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-  },
-  categoryText: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  footerText: {
-    fontSize: 14,
+  menuText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
