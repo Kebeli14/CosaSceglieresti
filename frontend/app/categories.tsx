@@ -27,7 +27,7 @@ const categories: Category[] = [
   {
     id: "divertente",
     name: "Divertente",
-    icon: "sentiment-satisfied", // faccina buffa
+    icon: "celebration",
     iconFamily: "material",
     color: "#facc15",
     gradient: ["#facc15", "#fbbf24"],
@@ -64,6 +64,15 @@ const categories: Category[] = [
     color: "#ec4899",
     gradient: ["#ec4899", "#f472b6"],
   },
+  {
+  id: "coming-soon",
+  name: "Presto novità...",
+  icon: "hourglass-empty",
+  iconFamily: "material",
+  color: "#6b7280",
+  gradient: ["#6b7280", "#9ca3af"],
+},
+
 ];
 
 export default function Categories() {
@@ -138,19 +147,25 @@ export default function Categories() {
         </Text>
       </View>
 
-      {/* Categories */}
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.categoriesContainer}
+        contentContainerStyle={[
+        styles.categoriesContainer,
+        { flexGrow: 1 },
+      ]}
         showsVerticalScrollIndicator={false}
       >
-        {categories.map((category, index) => (
+        {categories.map((category) => (
           <TouchableOpacity
-            key={category.id}
+          key={category.id}
             activeOpacity={0.8}
-            onPress={() => handleCategoryPress(category)}
-            style={styles.categoryButtonWrapper}
-          >
+            disabled={category.id === "coming-soon"}
+            onPress={() =>
+          category.id !== "coming-soon" && handleCategoryPress(category)
+      }
+        style={styles.categoryButtonWrapper}
+      >
+
             <LinearGradient
               colors={category.gradient}
               start={{ x: 0, y: 0 }}
@@ -161,11 +176,6 @@ export default function Categories() {
                 {renderIcon(category)}
               </View>
               <Text style={styles.categoryText}>{category.name}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color="rgba(255,255,255,0.7)"
-              />
             </LinearGradient>
           </TouchableOpacity>
         ))}
@@ -216,43 +226,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoriesContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
+  paddingHorizontal: 20,
+  paddingBottom: 40,
+  flexDirection: "row",
+  flexWrap: "wrap",
+},
+
   categoryButtonWrapper: {
-    marginBottom: 16,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
+  width: "50%",
+  padding: 8,          // ⬅ spazio tra le card
+},
+
   categoryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 24,
-    borderRadius: 20,
-  },
+  aspectRatio: 0.9,    // ⬅ più basse
+  borderRadius: 20,
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 16,
+},
+
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
+   width: 70,
+   height: 70,
+   borderRadius: 35,
+   backgroundColor: "rgba(255,255,255,0.25)",
+   alignItems: "center",
+   justifyContent: "center",
+   marginBottom: 12,
   },
   categoryText: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
+  fontSize: 15,
+  fontWeight: "600",
+  color: "#FFFFFF",
+  textAlign: "center",
+  opacity: 0.85,
+},
+
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 16,

@@ -6,138 +6,166 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Animated,
-  Pressable,
+  Alert,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "./contexts/SettingsContext";
+import { useRouter } from "expo-router";
 
 export default function Friend() {
   const { colors, vibrate } = useSettings();
+  const router = useRouter();
+
   const [selectedChoice, setSelectedChoice] = useState<"A" | "B" | null>(null);
-  const [showStats, setShowStats] = useState(false);
-  const [stats, setStats] = useState({ percentageA: 50, percentageB: 50 }); // esempio
 
   const scaleA = useRef(new Animated.Value(1)).current;
   const scaleB = useRef(new Animated.Value(1)).current;
 
-  const options = ["Opzione A 🤪", "Opzione B 😜"];
+  const options = ["Opzione A", "Opzione B"];
+
+  const gradients = {
+    A: ["#f97316", "#fb7185"], // arancio → rosa
+    B: ["#3b82f6", "#06b6d4"], // blu → ciano
+  };
 
   const handleChoice = (choice: "A" | "B") => {
-    if (showStats) return;
+    if (selectedChoice) return;
 
     vibrate("medium");
     setSelectedChoice(choice);
-    setShowStats(true);
 
-    // animazione
     const scale = choice === "A" ? scaleA : scaleB;
     Animated.sequence([
       Animated.timing(scale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1.05, duration: 100, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1.08, duration: 150, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
     ]).start();
+  };
+
+  const handleBack = () => {
+    Alert.alert(
+      "Conferma",
+      "Sei sicuro di voler tornare indietro? La tua scelta andrà persa.",
+      [
+        { text: "Annulla", style: "cancel" },
+        { text: "Sì", onPress: () => router.back() },
+      ]
+    );
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Conosci il tuo amico</Text>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={28} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: colors.text }]}>Conosci il tuo amico</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        Scegli cosa pensi che il tuo amico preferisca
+        Scegli cosa pensi che preferisca
       </Text>
 
-      <Pressable style={styles.gameContainer}>
-        {/* Option A */}
-        <Animated.View style={[styles.optionWrapper, { transform: [{ scale: scaleA }] }]}>
+      {/* OPTIONS PUZZLE */}
+      <View style={styles.optionsContainer}>
+        {/* Opzione A */}
+        <Animated.View style={{ flex: 1, transform: [{ scale: scaleA }] }}>
           <TouchableOpacity
-            style={[
-              styles.optionButton,
-              { backgroundColor: colors.cardBackground },
-              selectedChoice === "A" && showStats && styles.selectedOption,
-            ]}
+            style={{ flex: 1 }}
+            activeOpacity={0.9}
             onPress={() => handleChoice("A")}
-            disabled={showStats}
           >
-            <Text style={[styles.optionText, { color: colors.text }]}>{options[0]}</Text>
-            {showStats && (
-              <View style={styles.statsOverlay}>
-                <Text style={styles.percentageText}>{stats.percentageA}%</Text>
-              </View>
-            )}
+            <LinearGradient
+              colors={gradients.A}
+              style={[styles.optionCard, styles.optionCardTop, selectedChoice === "A" && styles.selectedGlow]}
+            >
+              <Text style={styles.optionText}>{options[0]}</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
 
-        {/* OR Circle */}
-        <View style={[styles.orCircle, { backgroundColor: colors.primary }]}>
+        {/* Cerchio “O” incastrato */}
+        <View style={styles.orCircle}>
           <Text style={styles.orText}>O</Text>
         </View>
 
-        {/* Option B */}
-        <Animated.View style={[styles.optionWrapper, { transform: [{ scale: scaleB }] }]}>
+        {/* Opzione B */}
+        <Animated.View style={{ flex: 1, transform: [{ scale: scaleB }] }}>
           <TouchableOpacity
-            style={[
-              styles.optionButton,
-              { backgroundColor: colors.cardBackground },
-              selectedChoice === "B" && showStats && styles.selectedOption,
-            ]}
+            style={{ flex: 1 }}
+            activeOpacity={0.9}
             onPress={() => handleChoice("B")}
-            disabled={showStats}
           >
-            <Text style={[styles.optionText, { color: colors.text }]}>{options[1]}</Text>
-            {showStats && (
-              <View style={styles.statsOverlay}>
-                <Text style={styles.percentageText}>{stats.percentageB}%</Text>
-              </View>
-            )}
+            <LinearGradient
+              colors={gradients.B}
+              style={[styles.optionCard, styles.optionCardBottom, selectedChoice === "B" && styles.selectedGlow]}
+            >
+              <Text style={styles.optionText}>{options[1]}</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
-      </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 28, fontWeight: "700", textAlign: "center", marginTop: 20 },
-  subtitle: { fontSize: 16, textAlign: "center", marginTop: 8 },
-  gameContainer: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
-  optionWrapper: { marginVertical: 12 },
-  optionButton: {
-    minHeight: 180,
-    borderRadius: 24,
+  container: { flex: 1, padding: 16 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },
+  backButton: { width: 40 },
+  title: { fontSize: 26, fontWeight: "700", textAlign: "center", flex: 1 },
+  subtitle: { fontSize: 16, textAlign: "center", marginBottom: 16, color: "#888" },
+
+  optionsContainer: { flex: 1, justifyContent: "center", position: "relative" },
+
+  optionCard: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+
+  optionCardTop: {
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
+    marginBottom: -32, // fa spazio per il cerchio
+  },
+
+  optionCardBottom: {
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    marginTop: -32, // fa spazio per il cerchio
+  },
+
+  optionText: { fontSize: 24, fontWeight: "800", color: "#FFFFFF", textAlign: "center" },
+  selectedGlow: { borderWidth: 3, borderColor: "#FFFFFF" },
+
+  orCircle: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -32,
+    marginTop: -32,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#FFD700", // giallo oro
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 3,
-    borderColor: "transparent",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
+    zIndex: 10, // sopra le card
   },
-  selectedOption: { borderColor: "#4ade80" },
-  optionText: { fontSize: 22, fontWeight: "700", textAlign: "center", lineHeight: 32 },
-  orCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignSelf: "center",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  orText: { fontSize: 28, fontWeight: "800", color: "#FFFFFF" },
-  statsOverlay: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 2,
-    borderTopColor: "rgba(255,255,255,0.2)",
-    width: "100%",
-    alignItems: "center",
-  },
-  percentageText: { fontSize: 36, fontWeight: "800", color: "#4ade80" },
+  orText: { fontSize: 28, fontWeight: "900", color: "#000000" },
 });

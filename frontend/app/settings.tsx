@@ -4,16 +4,18 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "./contexts/SettingsContext";
+// 1. Importiamo gli Insets
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Settings() {
   const router = useRouter();
+  const insets = useSafeAreaInsets(); // 2. Calcoliamo lo spazio sicuro
   const {
     soundEnabled,
     vibrationEnabled,
@@ -26,18 +28,25 @@ export default function Settings() {
   } = useSettings();
 
   const handleBack = () => {
-    vibrate("light");
+    if (vibrate) vibrate("light");
     router.back();
   };
 
   const handleThemeChange = (newTheme: "light" | "dark") => {
-    vibrate("light");
+    if (vibrate) vibrate("light");
     setTheme(newTheme);
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <View
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: colors.background,
+          // 3. Applichiamo il padding dinamico per la fotocamera/notch
+          paddingTop: insets.top 
+        }
+      ]}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -54,14 +63,14 @@ export default function Settings() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Audio Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
             Audio
           </Text>
           
           <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <Ionicons name="volume-high" size={24} color={colors.primary} />
+                <Ionicons name="volume-high" size={24} color="#3b82f6" />
                 <View style={styles.settingTextContainer}>
                   <Text style={[styles.settingTitle, { color: colors.text }]}>
                     Effetti sonori
@@ -76,7 +85,7 @@ export default function Settings() {
               <Switch
                 value={soundEnabled}
                 onValueChange={toggleSound}
-                trackColor={{ false: "#d1d5db", true: colors.primary }}
+                trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
                 thumbColor="#ffffff"
                 ios_backgroundColor="#d1d5db"
               />
@@ -86,14 +95,14 @@ export default function Settings() {
 
         {/* Vibration Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
             Feedback tattile
           </Text>
           
           <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <Ionicons name="phone-portrait" size={24} color={colors.primary} />
+                <Ionicons name="phone-portrait" size={24} color="#3b82f6" />
                 <View style={styles.settingTextContainer}>
                   <Text style={[styles.settingTitle, { color: colors.text }]}>
                     Vibrazione
@@ -108,7 +117,7 @@ export default function Settings() {
               <Switch
                 value={vibrationEnabled}
                 onValueChange={toggleVibration}
-                trackColor={{ false: "#d1d5db", true: colors.primary }}
+                trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
                 thumbColor="#ffffff"
                 ios_backgroundColor="#d1d5db"
               />
@@ -118,7 +127,7 @@ export default function Settings() {
 
         {/* Theme Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
             Aspetto
           </Text>
           
@@ -129,7 +138,7 @@ export default function Settings() {
               activeOpacity={0.7}
             >
               <View style={styles.settingInfo}>
-                <Ionicons name="sunny" size={24} color={colors.primary} />
+                <Ionicons name="sunny" size={24} color="#3b82f6" />
                 <View style={styles.settingTextContainer}>
                   <Text style={[styles.settingTitle, { color: colors.text }]}>
                     Tema Chiaro
@@ -137,7 +146,7 @@ export default function Settings() {
                 </View>
               </View>
               {theme === "light" && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />
               )}
             </TouchableOpacity>
 
@@ -149,7 +158,7 @@ export default function Settings() {
               activeOpacity={0.7}
             >
               <View style={styles.settingInfo}>
-                <Ionicons name="moon" size={24} color={colors.primary} />
+                <Ionicons name="moon" size={24} color="#3b82f6" />
                 <View style={styles.settingTextContainer}>
                   <Text style={[styles.settingTitle, { color: colors.text }]}>
                     Tema Scuro
@@ -157,7 +166,7 @@ export default function Settings() {
                 </View>
               </View>
               {theme === "dark" && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />
               )}
             </TouchableOpacity>
           </View>
@@ -165,7 +174,7 @@ export default function Settings() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
             Informazioni
           </Text>
           
@@ -195,11 +204,11 @@ export default function Settings() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-            Cosa Sceglieresti? © 2025
+            Cosa Sceglieresti? © 2026
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -212,15 +221,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingVertical: 10,
   },
   backIcon: {
     width: 40,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
     flex: 1,
     textAlign: "center",
   },
@@ -235,24 +243,21 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 12,
+    letterSpacing: 1,
+    marginBottom: 8,
     paddingHorizontal: 4,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
   settingRow: {
     flexDirection: "row",
@@ -265,15 +270,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingTextContainer: {
-    marginLeft: 16,
+    marginLeft: 15,
     flex: 1,
   },
   settingTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   settingDescription: {
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 2,
   },
   themeRow: {
@@ -284,7 +289,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    marginVertical: 8,
+    marginVertical: 4,
   },
   infoRow: {
     flexDirection: "row",
@@ -293,10 +298,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   footer: {
-    paddingVertical: 32,
+    paddingVertical: 40,
     alignItems: "center",
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: "500",
   },
 });

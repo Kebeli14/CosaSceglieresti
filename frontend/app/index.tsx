@@ -1,240 +1,124 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
-  StatusBar as RNStatusBar,
-  Modal,
-  Pressable,
+  ScrollView,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "./contexts/SettingsContext";
+import { useAuth } from "./contexts/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Index() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors, vibrate } = useSettings();
-  const [menuVisible, setMenuVisible] = useState(false);
+  const { user } = useAuth();
 
-  const toggleMenu = () => {
-    vibrate("light");
-    setMenuVisible(!menuVisible);
-  };
-
-  const handleSettings = () => {
-    toggleMenu();
-    router.push("/settings");
-  };
-
-  const handleLogin = () => {
-    toggleMenu();
-    router.push("/contexts/login"); // o funzione di login Google
+  // Usiamo "any" per evitare l'errore su router.push
+  const navigateTo = (path: any) => {
+    if (vibrate) vibrate("light");
+    router.push(path);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <RNStatusBar
-        barStyle={colors.background === "#000000" ? "light-content" : "dark-content"}
-      />
-
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      
       {/* Header */}
       <View style={styles.header}>
-        {/* Hamburger */}
-        <TouchableOpacity onPress={toggleMenu} style={styles.headerLeft}>
-          <Ionicons name="menu-outline" size={28} color={colors.text} />
-        </TouchableOpacity>
-
-        <Text style={[styles.title, { color: colors.text }]}>Cosa Sceglieresti?</Text>
-
-        <View style={styles.headerRight} />
-      </View>
-
-      {/* Menu Hamburger */}
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={toggleMenu}
-      >
-        <Pressable style={styles.overlay} onPress={toggleMenu}>
-          <View style={[styles.menuContainer, { backgroundColor: colors.cardBackground }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleLogin}>
-              <Ionicons name="log-in-outline" size={22} color={colors.text} />
-              <Text style={[styles.menuText, { color: colors.text }]}>Login Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={handleSettings}>
-              <Ionicons name="settings-outline" size={22} color={colors.text} />
-              <Text style={[styles.menuText, { color: colors.text }]}>Impostazioni</Text>
-            </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.profileSection} 
+          onPress={() => navigateTo("/profile")}
+        >
+          <View style={[styles.avatarContainer, { backgroundColor: colors.cardBackground }]}>
+            <Ionicons name="person" size={24} color={colors.primary} />
           </View>
-        </Pressable>
-      </Modal>
-
-      {/* Subtitle */}
-      <View style={styles.subtitleContainer}>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Scegli la modalità di gioco
-        </Text>
-      </View>
-
-      {/* MODALITÀ */}
-      <View style={{ paddingHorizontal: 20, gap: 20 }}>
-        {/* Modalità Classica */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => router.push("/categories")}
-        >
-          <LinearGradient
-            colors={["#2563eb", "#3b82f6"]}
-            style={styles.modeButton}
-          >
-            <View style={styles.modeContent}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modeTitle}>Modalità Classica</Text>
-                <Text style={styles.modeSubtitle}>
-                  Scegli la tua opzione preferita tra le categorie disponibili
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Indovina l'opzione più votata */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => router.push("/popular")}
-        >
-          <LinearGradient
-            colors={["#16a34a", "#22c55e"]}
-            style={styles.modeButton}
-          >
-            <View style={styles.modeContent}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modeTitle}>Indovina l'opzione più votata</Text>
-                <Text style={styles.modeSubtitle}>
-                  Prova a indovinare cosa hanno scelto più utenti
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Sfida un amico */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => router.push("/friend")}
-        >
-          <LinearGradient
-            colors={["#f59e0b", "#fbbf24"]}
-            style={styles.modeButton}
-          >
-            <View style={styles.modeContent}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modeTitle}>Sfida un amico</Text>
-                <Text style={styles.modeSubtitle}>
-                  Sfida un amico e indovina le sue preferenze
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Chi sei? */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => router.push("/profile")}
-        >
-          <LinearGradient
-            colors={["#8b5cf6", "#a78bfa"]}
-            style={styles.modeButton}
-          >
-            <View style={styles.modeContent}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modeTitle}>Chi sei?</Text>
-                <Text style={styles.modeSubtitle}>
-                  Scopri il tuo profilo di personalità
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={28} color="rgba(255,255,255,0.7)" />
-            </View>
-          </LinearGradient>
+          <View>
+            <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>
+              {user ? "CIAO," : "BENVENUTO"}
+            </Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {user ? user.displayName : "Login"}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.subtitleContainer}>
+          <Text style={[styles.subtitle, { color: colors.text }]}>Scegli la sfida</Text>
+        </View>
+
+        <View style={styles.menuContainer}>
+          
+          {/* Modalità Classica */}
+          <TouchableOpacity onPress={() => navigateTo("/categories")}>
+            <LinearGradient colors={["#3b82f6", "#2563eb"]} style={styles.modeButton}>
+              <Text style={styles.modeTitle}>Modalità Classica</Text>
+              <Text style={styles.modeSubtitle}>Le categorie di sempre</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Popolare */}
+          <TouchableOpacity onPress={() => navigateTo("/popular")}>
+            <LinearGradient colors={["#8b5cf6", "#7c3aed"]} style={styles.modeButton}>
+              <Text style={styles.modeTitle}>Indovina la Popolare</Text>
+              <Text style={styles.modeSubtitle}>Cosa pensa la massa?</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Sfida Amico */}
+          <TouchableOpacity onPress={() => navigateTo("/online")}>
+            <LinearGradient colors={["#f59e0b", "#d97706"]} style={styles.modeButton}>
+              <Text style={styles.modeTitle}>Sfida un amico</Text>
+              <Text style={styles.modeSubtitle}>Tu lo conosci davvero?</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+  header: { 
+    flexDirection: "row", 
+    paddingHorizontal: 25, 
+    paddingVertical: 15 
   },
-  headerLeft: { width: 40 },
-  headerRight: { width: 40 },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
-    flex: 1,
+  profileSection: { flexDirection: "row", alignItems: "center", gap: 12 },
+  avatarContainer: { 
+    width: 50, 
+    height: 50, 
+    borderRadius: 25, 
+    justifyContent: "center", 
+    alignItems: "center" 
   },
-  subtitleContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    alignItems: "center",
+  welcomeText: { fontSize: 10, fontWeight: "700" },
+  userName: { fontSize: 18, fontWeight: "800" },
+  subtitleContainer: { paddingHorizontal: 25, marginVertical: 20 },
+  subtitle: { fontSize: 24, fontWeight: "800" },
+  menuContainer: { paddingHorizontal: 20, gap: 15 },
+  modeButton: { 
+    padding: 25, 
+    borderRadius: 20,
+    justifyContent: "center"
   },
-  subtitle: { fontSize: 16, textAlign: "center" },
-  modeButton: {
-    padding: 28,
-    borderRadius: 22,
+  modeTitle: { 
+    color: "#fff", 
+    fontSize: 20, 
+    fontWeight: "800" 
   },
-  modeContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  modeTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  modeSubtitle: {
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 6,
-    fontSize: 15,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-start",
-    paddingTop: 60,
-  },
-  menuContainer: {
-    width: 220,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginLeft: 20,
-    elevation: 5,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  menuText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  modeSubtitle: { 
+    color: "rgba(255,255,255,0.8)", 
+    fontSize: 14, 
+    marginTop: 5 
+  }
 });
