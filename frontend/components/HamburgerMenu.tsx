@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Modal, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../app/contexts/AuthContext";
-import { useSettings } from "../app/contexts/SettingsContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { useRouter } from "expo-router";
 
 interface HamburgerMenuProps {

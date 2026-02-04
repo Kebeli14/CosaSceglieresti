@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useSettings } from "./contexts/SettingsContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { supabase } from "../lib/supabase";
 
 interface Question {

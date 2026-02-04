@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
+import * as Linking from 'expo-linking'; // Fondamentale per il redirect su mobile
 
 export default function Login() {
   const router = useRouter();
@@ -11,16 +12,27 @@ export default function Login() {
 
   // Funzione per login con Google
   const handleGoogleLogin = async () => {
-    vibrate("medium");
+    if (vibrate) vibrate("medium");
+
+    // Crea l'URL che riporta l'utente a questa app (usa lo scheme 'frontend' definito in app.json)
+    const redirectUrl = Linking.createURL("/profile");
+
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: false,
+        },
       });
+
       if (error) throw error;
 
-      // L'utente sarà reindirizzato automaticamente a Supabase login page
-      // Qui puoi mostrare un alert o messaggio
-      Alert.alert("Login", "Verrai reindirizzato per accedere con Google");
+      // Se Supabase restituisce un URL di autenticazione, lo apriamo nel browser
+      if (data?.url) {
+        const result = await Linking.openURL(data.url);
+      }
+      
     } catch (err: any) {
       console.error(err);
       Alert.alert("Errore", err.message || "Impossibile eseguire il login");

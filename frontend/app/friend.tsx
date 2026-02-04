@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useSettings } from "./contexts/SettingsContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { useRouter } from "expo-router";
 
 export default function Friend() {

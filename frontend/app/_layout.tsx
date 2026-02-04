@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
-import { SettingsProvider, useSettings } from "./contexts/SettingsContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { SettingsProvider, useSettings } from "../contexts/SettingsContext";
+import { AuthProvider } from "../contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 // AGGIUNGI QUESTO IMPORT
@@ -95,9 +95,9 @@ function LayoutContent() {
       <Tabs.Screen name="game" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="whoareu" options={{ href: null }} />
+      <Tabs.Screen name="login" options={{ href: null }} />
       
       {/* ATTENZIONE: Questo deve corrispondere al percorso che vedi scritto nella tab! */}
-      <Tabs.Screen name="contexts/login" options={{ href: null }} />
       <Tabs.Screen name="contexts/AuthContext" options={{ href: null }} />
       <Tabs.Screen name="contexts/SettingsContext" options={{ href: null }} />
 

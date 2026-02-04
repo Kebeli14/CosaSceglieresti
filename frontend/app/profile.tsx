@@ -1,90 +1,91 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSettings } from "./contexts/SettingsContext";
-import { useAuth } from "./contexts/AuthContext";
-// 1. Importa gli insets
+import { useSettings } from "../contexts/SettingsContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Profile() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets(); // 2. Inizializza gli insets
   const { colors, vibrate } = useSettings();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const handleOptionPress = (path: string) => {
+  const handleLogout = async () => {
+    if (vibrate) vibrate("medium");
+    await signOut();
+    router.replace("/"); 
+  };
+
+  const handleLogin = () => {
     if (vibrate) vibrate("light");
-    router.push(path);
+    router.push("/login"); 
+  };
+
+  const goToSettings = () => {
+    if (vibrate) vibrate("light");
+    router.push("/settings");
   };
 
   return (
-    <View 
-      style={[
-        styles.container, 
-        { 
-          backgroundColor: colors.background,
-          // 3. Applica il padding superiore dinamico
-          paddingTop: insets.top 
-        }
-      ]}
-    >
-      {/* Header */}
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Il Tuo Profilo</Text>
+        <View style={styles.headerSide} />
+        <Text style={[styles.standardTitle, { color: colors.text }]}>Profilo</Text>
+        <TouchableOpacity 
+          style={styles.headerSide} 
+          onPress={goToSettings}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="settings-outline" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.profileSection}>
-          <View style={[styles.avatarContainer, { borderColor: "#3b82f6", backgroundColor: colors.cardBackground }]}>
-            <Ionicons name="person" size={60} color={colors.textSecondary} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {user ? (
+          <View style={styles.authSection}>
+            <View style={[styles.avatarWrapper, { borderColor: colors.primary }]}>
+              {user.user_metadata?.avatar_url ? (
+                <Image source={{ uri: user.user_metadata.avatar_url }} style={styles.avatar} />
+              ) : (
+                <Ionicons name="person" size={60} color={colors.textSecondary} />
+              )}
+            </View>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {user.user_metadata?.full_name || "Utente"}
+            </Text>
+            <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
+              {user.email}
+            </Text>
+            <View style={styles.menuContainer}>
+              <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.cardBackground }]}>
+                <Ionicons name="stats-chart" size={22} color={colors.primary} />
+                <Text style={[styles.menuText, { color: colors.text }]}>Le mie statistiche</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.logoutButton, { marginTop: 40 }]} 
+                onPress={handleLogout}
+              >
+                <Ionicons name="log-out-outline" size={22} color="#ff4444" />
+                <Text style={styles.logoutText}>Disconnetti</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={[styles.displayName, { color: colors.text }]}>
-            {user ? user.displayName : "Ospite"}
-          </Text>
-          <Text style={[styles.username, { color: colors.textSecondary }]}>
-            {user ? user.email : "Esegui il login per salvare i dati"}
-          </Text>
-        </View>
-
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity 
-            style={[styles.optionItem, { backgroundColor: colors.cardBackground }]} 
-            onPress={() => handleOptionPress("/achievements")}
-          >
-            <Ionicons name="trophy-outline" size={24} color="#3b82f6" />
-            <Text style={[styles.optionTitle, { color: colors.text, flex: 1, marginLeft: 15 }]}>Achievements</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.optionItem, { backgroundColor: colors.cardBackground }]} 
-            onPress={() => handleOptionPress("/settings")}
-          >
-            <Ionicons name="settings-outline" size={24} color="#3b82f6" />
-            <Text style={[styles.optionTitle, { color: colors.text, flex: 1, marginLeft: 15 }]}>Impostazioni</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.optionItem, { backgroundColor: "#FFF9E6", borderWidth: 1, borderColor: "#F59E0B" }]} 
-            onPress={() => handleOptionPress("/premium")}
-          >
-            <Ionicons name="megaphone-outline" size={24} color="#F59E0B" />
-            <Text style={[styles.optionTitle, { color: "#000", flex: 1, marginLeft: 15 }]}>Rimuovi Ads</Text>
-            <Ionicons name="chevron-forward" size={20} color="#F59E0B" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <Text style={styles.logoutText}>Disconnetti</Text>
-          </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={styles.guestSection}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.cardBackground }]}>
+              <Ionicons name="lock-closed-outline" size={80} color={colors.textSecondary} />
+            </View>
+            <Text style={[styles.guestTitle, { color: colors.text }]}>Ops! Non sei loggato</Text>
+            <Text style={[styles.guestSub, { color: colors.textSecondary }]}>
+              Accedi per salvare i tuoi progressi e sfidare i tuoi amici.
+            </Text>
+            <TouchableOpacity style={[styles.loginButton, { backgroundColor: colors.primary }]} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>Accedi / Registrati</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -92,42 +93,24 @@ export default function Profile() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { 
-    paddingHorizontal: 20, 
-    paddingVertical: 15, 
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  headerTitle: { fontSize: 22, fontWeight: "800" },
-  profileSection: { alignItems: "center", marginVertical: 30 },
-  avatarContainer: { 
-    width: 120, 
-    height: 120, 
-    borderRadius: 60, 
-    justifyContent: "center", 
-    alignItems: "center", 
-    borderWidth: 4 
-  },
-  displayName: { fontSize: 24, fontWeight: "800", marginTop: 10 },
-  username: { fontSize: 15, marginTop: 4 },
-  optionsContainer: { paddingHorizontal: 20, gap: 12 },
-  optionItem: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    padding: 18, 
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-  },
-  optionTitle: { fontSize: 16, fontWeight: "700" },
-  logoutButton: { 
-    marginTop: 30, 
-    padding: 20, 
-    alignItems: 'center', 
-    marginBottom: 50 
-  },
-  logoutText: { color: "#EF4444", fontWeight: "700", fontSize: 16 }
+  header: { height: 60, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 },
+  headerSide: { width: 40, alignItems: 'center', justifyContent: 'center' },
+  standardTitle: { fontSize: 22, fontWeight: "800", textAlign: 'center', flex: 1 },
+  content: { paddingHorizontal: 25, alignItems: 'center', paddingTop: 20, paddingBottom: 40 },
+  avatarWrapper: { width: 120, height: 120, borderRadius: 60, borderWidth: 3, justifyContent: 'center', alignItems: 'center', overflow: 'hidden', marginBottom: 15 },
+  avatar: { width: '100%', height: '100%' },
+  userName: { fontSize: 24, fontWeight: '800' },
+  userEmail: { fontSize: 14, marginTop: 5, marginBottom: 30 },
+  menuContainer: { width: '100%', gap: 10 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 15, gap: 15 },
+  menuText: { fontSize: 16, fontWeight: '600' },
+  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 15 },
+  logoutText: { color: '#ff4444', fontSize: 16, fontWeight: '700' },
+  guestSection: { alignItems: 'center', width: '100%', paddingTop: 40 },
+  iconCircle: { width: 140, height: 140, borderRadius: 70, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  guestTitle: { fontSize: 22, fontWeight: '800', marginBottom: 10 },
+  guestSub: { textAlign: 'center', lineHeight: 22, marginBottom: 30 },
+  loginButton: { width: '100%', padding: 18, borderRadius: 20, alignItems: 'center' },
+  loginButtonText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  authSection: { width: '100%', alignItems: 'center' }
 });

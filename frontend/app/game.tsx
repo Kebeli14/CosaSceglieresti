@@ -9,316 +9,220 @@ import {
   Animated,
   Alert,
   Pressable,
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useSettings } from "./contexts/SettingsContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { supabase } from "../lib/supabase";
 
-interface Question {
-  id: string;
-  category: string;
-  option_a: string;
-  option_b: string;
-  votes_a: number;
-  votes_b: number;
-}
-
-interface Stats {
-  votesA: number;
-  votesB: number;
-  percentageA: number;
-  percentageB: number;
-}
+const { width, height } = Dimensions.get("window");
 
 export default function Game() {
   const router = useRouter();
   const { category } = useLocalSearchParams();
   const { colors, vibrate } = useSettings();
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showStats, setShowStats] = useState(false);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [selectedChoice, setSelectedChoice] = useState<"A" | "B" | null>(null);
+  const [stats, setStats] = useState<{ percentageA: number; percentageB: number } | null>(null);
 
-  const scaleA = useRef(new Animated.Value(1)).current;
-  const scaleB = useRef(new Animated.Value(1)).current;
-  const statsOpacity = useRef(new Animated.Value(0)).current;
-
-  // Funzione per caricare domande da Supabase
-  const loadQuestions = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("questions")
-        .select("*")
-        .eq("category", category);
-
-      if (error) {
-        console.error(error);
-        Alert.alert("Errore", "Impossibile caricare le domande");
-        setQuestions([]);
-      } else {
-        setQuestions(data ?? []);
-      }
-    } catch (err) {
-      console.error(err);
-      setQuestions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadQuestions();
   }, [category]);
 
-  // Funzione per gestire la scelta dell'utente
-  const handleChoice = async (choice: "A" | "B") => {
-    if (showStats) return;
+  const loadQuestions = async () => {
+    setLoading(true);
+    try {
+      let query = supabase.from("questions").select("*");
+      if (category !== "random") {
+        query = query.eq("category", category);
+      }
 
-    vibrate("medium");
-    setSelectedChoice(choice);
+      const { data, error } = await query;
+      if (error) throw error;
 
-    const q = questions[currentIndex];
-    const updates =
-      choice === "A" ? { votes_a: q.votes_a + 1 } : { votes_b: q.votes_b + 1 };
+      if (data && data.length > 0) {
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setQuestions(shuffled);
+      }
+    } catch (err) {
+      Alert.alert("Errore", "Impossibile caricare le domande");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const { error } = await supabase
-      .from("questions")
-      .update(updates)
-      .eq("id", q.id);
-
-    if (error) {
-      console.error(error);
-      Alert.alert("Errore", "Impossibile salvare il voto");
+  const handlePress = async (choice: "A" | "B") => {
+    if (showStats) {
+      handleNext();
       return;
     }
 
-    const updated = { ...q, ...updates };
-    const newQuestions = [...questions];
-    newQuestions[currentIndex] = updated;
-    setQuestions(newQuestions);
-
-    const totalVotes = updated.votes_a + updated.votes_b;
+    vibrate("medium");
+    const q = questions[currentIndex];
+    const totalVotes = q.votes_a + q.votes_b + 1;
+    
     setStats({
-      votesA: updated.votes_a,
-      votesB: updated.votes_b,
-      percentageA: (updated.votes_a / totalVotes) * 100,
-      percentageB: (updated.votes_b / totalVotes) * 100,
+      percentageA: ((choice === "A" ? q.votes_a + 1 : q.votes_a) / totalVotes) * 100,
+      percentageB: ((choice === "B" ? q.votes_b + 1 : q.votes_b) / totalVotes) * 100,
     });
 
     setShowStats(true);
+    Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
 
-    // Animazione
-    const scale = choice === "A" ? scaleA : scaleB;
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1.05, duration: 100, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
+    const updates = choice === "A" ? { votes_a: q.votes_a + 1 } : { votes_b: q.votes_b + 1 };
+    await supabase.from("questions").update(updates).eq("id", q.id);
   };
 
   const handleNext = () => {
     vibrate("light");
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      fadeAnim.setValue(0);
       setShowStats(false);
       setStats(null);
-      setSelectedChoice(null);
-      statsOpacity.setValue(0);
+      setCurrentIndex(currentIndex + 1);
     } else {
-      Alert.alert("Fine!", "Hai completato tutte le domande!", [
-        { text: "Altra categoria", onPress: () => router.back() },
-        { text: "Rigioca", onPress: resetGame },
-      ]);
+      router.navigate("/categories");
     }
-  };
-
-  const resetGame = () => {
-    setCurrentIndex(0);
-    setShowStats(false);
-    setStats(null);
-    setSelectedChoice(null);
-    statsOpacity.setValue(0);
-  };
-
-  const handleBack = () => {
-    vibrate("light");
-    router.back();
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            Caricamento domande...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (questions.length === 0) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            Nessuna domanda disponibile per questa categoria.
-          </Text>
-          <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: colors.primary }]}
-            onPress={handleBack}
-          >
-            <Text style={styles.backButtonText}>Torna indietro</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     );
   }
 
   const currentQuestion = questions[currentIndex];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backIcon}>
-          <Ionicons name="arrow-back" size={28} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {category?.toString().toUpperCase()}
-        </Text>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" hidden={true} />
+
+      {/* OPZIONE A - ROSSO */}
+      <Pressable 
+        style={[styles.fullOption, { backgroundColor: "#FF595E" }]} 
+        onPress={() => handlePress("A")}
+      >
+        <View style={styles.contentContainer}>
+          <Text style={styles.optionText}>{currentQuestion?.option_a}</Text>
+          {showStats && (
+            <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>
+              {stats?.percentageA.toFixed(0)}%
+            </Animated.Text>
+          )}
+        </View>
+      </Pressable>
+
+      {/* BADGE "OPPURE" - INGRANDITO E CENTRATO */}
+      <View style={styles.midBadge}>
+        <Text style={styles.midText}>OPPURE</Text>
       </View>
 
-      {/* Game Area */}
-      <Pressable
-        style={styles.gameContainer}
-        onPress={showStats ? handleNext : undefined}
+      {/* OPZIONE B - BLU */}
+      <Pressable 
+        style={[styles.fullOption, { backgroundColor: "#1982C4" }]} 
+        onPress={() => handlePress("B")}
       >
-        {/* Option A */}
-        <Animated.View style={[styles.optionWrapper, { transform: [{ scale: scaleA }] }]}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              styles.optionA,
-              { backgroundColor: colors.cardBackground },
-              selectedChoice === "A" && showStats && styles.selectedOption,
-            ]}
-            onPress={() => handleChoice("A")}
-            disabled={showStats}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.optionText, { color: colors.text }]}>
-              {currentQuestion.option_a}
-            </Text>
-            {showStats && stats && (
-              <View style={styles.statsOverlay}>
-                <Text style={styles.percentageText}>
-                  {stats.percentageA.toFixed(1)}%
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* OR Circle */}
-        <View style={[styles.orCircle, { backgroundColor: colors.primary }]}>
-          <Text style={styles.orText}>O</Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.optionText}>{currentQuestion?.option_b}</Text>
+          {showStats && (
+            <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>
+              {stats?.percentageB.toFixed(0)}%
+            </Animated.Text>
+          )}
         </View>
-
-        {/* Option B */}
-        <Animated.View style={[styles.optionWrapper, { transform: [{ scale: scaleB }] }]}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              styles.optionB,
-              { backgroundColor: colors.cardBackground },
-              selectedChoice === "B" && showStats && styles.selectedOption,
-            ]}
-            onPress={() => handleChoice("B")}
-            disabled={showStats}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.optionText, { color: colors.text }]}>
-              {currentQuestion.option_b}
-            </Text>
-            {showStats && stats && (
-              <View style={styles.statsOverlay}>
-                <Text style={styles.percentageText}>
-                  {stats.percentageB.toFixed(1)}%
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
       </Pressable>
-    </SafeAreaView>
+
+      {/* TASTO X */}
+      <SafeAreaView style={styles.headerOverlay}>
+        <TouchableOpacity 
+          onPress={() => router.navigate("/categories")} 
+          style={styles.backCircle}
+        >
+          <Ionicons name="close" size={28} color="white" />
+        </TouchableOpacity>
+      </SafeAreaView>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
+  mainContainer: { 
+    flex: 1,
+    zIndex: 999 
   },
-  backIcon: { width: 40 },
-  headerTitle: { fontSize: 18, fontWeight: "700", flex: 1, textAlign: "center" },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  loadingText: { fontSize: 18, marginTop: 16, textAlign: "center" },
-  gameContainer: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
-  optionWrapper: { marginVertical: 12 },
-  optionButton: {
-    minHeight: 180,
-    borderRadius: 24,
-    padding: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 3,
-    borderColor: "transparent",
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
   },
-  optionA: {},
-  optionB: {},
-  selectedOption: { borderColor: "#4ade80" },
-  optionText: { fontSize: 22, fontWeight: "700", textAlign: "center", lineHeight: 32 },
-  orCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignSelf: "center",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+  headerOverlay: { 
+    position: "absolute", 
+    top: 40, 
+    left: 20, 
+    zIndex: 1000 
   },
-  orText: { fontSize: 28, fontWeight: "800", color: "#FFFFFF" },
-  statsOverlay: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 2,
-    borderTopColor: "rgba(255,255,255,0.2)",
-    width: "100%",
-    alignItems: "center",
+  backCircle: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 22, 
+    backgroundColor: "rgba(0,0,0,0.3)", 
+    justifyContent: "center", 
+    alignItems: "center" 
   },
-  percentageText: { fontSize: 36, fontWeight: "800", color: "#4ade80" },
-  backButton: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
-  backButtonText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
+  fullOption: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    paddingHorizontal: 30 
+  },
+  contentContainer: { 
+    alignItems: "center", 
+    width: "100%" 
+  },
+  optionText: { 
+    fontSize: 28, 
+    fontWeight: "900", 
+    color: "white", 
+    textAlign: "center", 
+    textTransform: "uppercase" 
+  },
+  statText: { 
+    fontSize: 65, 
+    fontWeight: "900", 
+    color: "rgba(255,255,255,0.8)", 
+    marginTop: 20
+  },
+  midBadge: { 
+    position: "absolute", 
+    top: '50%',
+    left: '50%',
+    // Ingrandito: Altezza da 40 a 50, Larghezza da 90 a 110
+    marginTop: -25, 
+    marginLeft: -55, 
+    width: 110, 
+    height: 50, 
+    backgroundColor: "#111", 
+    borderRadius: 25, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    zIndex: 10, 
+    borderWidth: 3, // Bordo leggermente più spesso
+    borderColor: "white" 
+  },
+  midText: { 
+    color: "white", 
+    fontWeight: "900", 
+    fontSize: 15, // Testo ingrandito da 12 a 15
+    letterSpacing: 1 // Leggermente più distanziato per stile
+  },
 });

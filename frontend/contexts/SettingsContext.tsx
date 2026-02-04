@@ -3,14 +3,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 
 type Theme = "light" | "dark" | "auto";
+type Language = "it" | "en"; // Preparato per il futuro
 
 interface SettingsContextType {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   theme: Theme;
+  language: Language; // Nuova proprietà
   toggleSound: () => void;
   toggleVibration: () => void;
   setTheme: (theme: Theme) => void;
+  setLanguage: (lang: Language) => void; // Nuova funzione
   playSound: (soundType: "click" | "whoosh" | "success") => Promise<void>;
   vibrate: (type?: "light" | "medium" | "heavy") => void;
   colors: {
@@ -27,24 +30,23 @@ interface SettingsContextType {
   };
 }
 
-const SettingsContext = createContext<SettingsContextType | undefined>(
-  undefined
-);
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [theme, setThemeState] = useState<Theme>("light");
+  const [language, setLanguageState] = useState<Language>("it"); // Default italiano
 
-  // Load settings from storage
+  // Carica le impostazioni all'avvio
   useEffect(() => {
     loadSettings();
   }, []);
 
-  // Save settings whenever they change
+  // Salva le impostazioni ogni volta che cambiano
   useEffect(() => {
     saveSettings();
-  }, [soundEnabled, vibrationEnabled, theme]);
+  }, [soundEnabled, vibrationEnabled, theme, language]);
 
   const loadSettings = async () => {
     try {
@@ -54,6 +56,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setSoundEnabled(parsed.soundEnabled ?? true);
         setVibrationEnabled(parsed.vibrationEnabled ?? true);
         setThemeState(parsed.theme ?? "light");
+        setLanguageState(parsed.language ?? "it");
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -68,6 +71,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           soundEnabled,
           vibrationEnabled,
           theme,
+          language,
         })
       );
     } catch (error) {
@@ -75,25 +79,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleSound = () => {
-    setSoundEnabled(!soundEnabled);
-  };
-
-  const toggleVibration = () => {
-    setVibrationEnabled(!vibrationEnabled);
-  };
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-  };
+  const toggleSound = () => setSoundEnabled(!soundEnabled);
+  const toggleVibration = () => setVibrationEnabled(!vibrationEnabled);
+  const setTheme = (newTheme: Theme) => setThemeState(newTheme);
+  const setLanguage = (lang: Language) => setLanguageState(lang);
 
   const playSound = async (soundType: "click" | "whoosh" | "success") => {
     if (!soundEnabled) return;
-
     try {
-      // For MVP, we use haptic feedback as a fallback
-      // In production, you can add custom sound files
-      // For now, just use haptic feedback
       if (vibrationEnabled) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
@@ -104,7 +97,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const vibrate = (type: "light" | "medium" | "heavy" = "light") => {
     if (!vibrationEnabled) return;
-
     try {
       switch (type) {
         case "light":
@@ -122,7 +114,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Define colors based on theme
   const colors = {
     light: {
       background: "#F5F5F7",
@@ -158,9 +149,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         soundEnabled,
         vibrationEnabled,
         theme,
+        language,
         toggleSound,
         toggleVibration,
         setTheme,
+        setLanguage,
         playSound,
         vibrate,
         colors: currentColors,

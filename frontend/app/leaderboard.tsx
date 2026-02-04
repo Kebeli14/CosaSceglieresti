@@ -1,18 +1,18 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSettings } from "./contexts/SettingsContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Leaderboard() {
   const { colors } = useSettings();
   const insets = useSafeAreaInsets();
 
-  // Dati finti per visualizzare la classifica
+  // Dati finti
   const topPlayers = [
-    { id: 1, name: "Ivan", points: "2540", rank: 1, color: "#FFD700" }, // Oro
-    { id: 2, name: "David", points: "2100", rank: 2, color: "#C0C0C0" }, // Argento
-    { id: 3, name: "Austin", points: "1850", rank: 3, color: "#CD7F32" }, // Bronzo
+    { id: 1, name: "Ivan", points: "2540", rank: 1, color: "#FFD700" },
+    { id: 2, name: "David", points: "2100", rank: 2, color: "#C0C0C0" },
+    { id: 3, name: "Austin", points: "1850", rank: 3, color: "#CD7F32" },
   ];
 
   const otherPlayers = [
@@ -24,9 +24,12 @@ export default function Leaderboard() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-      {/* Header */}
+      
+      {/* HEADER STANDARDIZZATO */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Classifica</Text>
+        <View style={styles.headerSide} />
+        <Text style={[styles.standardTitle, { color: colors.text }]}>Classifica</Text>
+        <View style={styles.headerSide} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -34,7 +37,7 @@ export default function Leaderboard() {
         {/* PODIO */}
         <View style={styles.podiumContainer}>
           
-          {/* 2° POSTO (Sinistra) */}
+          {/* 2° POSTO */}
           <View style={[styles.podiumItem, { marginTop: 40 }]}>
             <View style={[styles.avatarCircle, { borderColor: topPlayers[1].color, backgroundColor: colors.cardBackground }]}>
               <Ionicons name="person" size={40} color={colors.textSecondary} />
@@ -46,7 +49,7 @@ export default function Leaderboard() {
             <Text style={[styles.podiumPoints, { color: colors.primary }]}>{topPlayers[1].points} pt</Text>
           </View>
 
-          {/* 1° POSTO (Centro) */}
+          {/* 1° POSTO */}
           <View style={styles.podiumItem}>
             <Ionicons name="ribbon" size={30} color={topPlayers[0].color} style={styles.crownIcon} />
             <View style={[styles.avatarCircle, { borderColor: topPlayers[0].color, width: 100, height: 100, borderRadius: 50, backgroundColor: colors.cardBackground }]}>
@@ -59,7 +62,7 @@ export default function Leaderboard() {
             <Text style={[styles.podiumPoints, { color: colors.primary, fontSize: 16 }]}>{topPlayers[0].points} pt</Text>
           </View>
 
-          {/* 3° POSTO (Destra) */}
+          {/* 3° POSTO */}
           <View style={[styles.podiumItem, { marginTop: 50 }]}>
             <View style={[styles.avatarCircle, { borderColor: topPlayers[2].color, width: 70, height: 70, borderRadius: 35, backgroundColor: colors.cardBackground }]}>
               <Ionicons name="person" size={35} color={colors.textSecondary} />
@@ -93,8 +96,26 @@ export default function Leaderboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingVertical: 15, alignItems: 'center' },
-  headerTitle: { fontSize: 22, fontWeight: "800" },
+  // Stili Header Standard (IDENTICI AGLI ALTRI)
+  header: { 
+    height: 60,
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 20,
+  },
+  headerSide: { 
+    width: 40, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  standardTitle: { 
+    fontSize: 22, 
+    fontWeight: "800", 
+    textAlign: 'center',
+    flex: 1 
+  },
+  // Fine Stili Header
   podiumContainer: { 
     flexDirection: 'row', 
     justifyContent: 'center', 
