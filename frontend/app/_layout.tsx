@@ -95,7 +95,9 @@ function LayoutContent() {
       <Tabs.Screen name="game" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="whoareu" options={{ href: null }} />
+      <Tabs.Screen name="daily-dilemma" options={{ href: null }} />
       <Tabs.Screen name="login" options={{ href: null }} />
+    
       
       {/* ATTENZIONE: Questo deve corrispondere al percorso che vedi scritto nella tab! */}
       <Tabs.Screen name="contexts/AuthContext" options={{ href: null }} />

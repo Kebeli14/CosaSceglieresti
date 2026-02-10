@@ -31,6 +31,7 @@ export default function PopularGame() {
   const [score, setScore] = useState(0);
   const [stats, setStats] = useState<{ pA: number; pB: number } | null>(null);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [userChoice, setUserChoice] = useState<"A" | "B" | null>(null); // Nuovo stato per il bordo
 
   // Animazioni
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -57,7 +58,6 @@ export default function PopularGame() {
     }
   };
 
-  // Funzione per salvare il record
   const saveHighScore = async (finalScore: number) => {
     try {
       const currentRecord = await AsyncStorage.getItem("popular_record");
@@ -74,6 +74,7 @@ export default function PopularGame() {
   const handleGuess = async (choice: "A" | "B") => {
     if (showResult) return;
 
+    setUserChoice(choice); // Memorizza la scelta per il bordo
     const q = questions[currentIndex];
     const total = q.votes_a + q.votes_b;
     const safeTotal = total === 0 ? 1 : total;
@@ -85,7 +86,6 @@ export default function PopularGame() {
     
     const isCorrect = choice === "A" ? q.votes_a >= q.votes_b : q.votes_b >= q.votes_a;
     
-    // Flash Visivo
     setFlashColor(isCorrect ? "#4ADE80" : "#EF4444");
     Animated.sequence([
       Animated.timing(flashAnim, { toValue: 0.4, duration: 100, useNativeDriver: false }),
@@ -99,7 +99,6 @@ export default function PopularGame() {
       setScore(prev => prev + 1);
     } else {
       vibrate("error");
-      // Salviamo il record prima di mostrare il game over
       await saveHighScore(score);
       setTimeout(() => setShowGameOver(true), 800);
     }
@@ -111,6 +110,7 @@ export default function PopularGame() {
     setShowResult(false);
     setShowGameOver(false);
     setStats(null);
+    setUserChoice(null); // Reset scelta
     fadeAnim.setValue(0);
     loadPopularQuestions();
   };
@@ -120,6 +120,7 @@ export default function PopularGame() {
     fadeAnim.setValue(0);
     setShowResult(false);
     setStats(null);
+    setUserChoice(null); // Reset scelta per la prossima domanda
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -141,7 +142,14 @@ export default function PopularGame() {
       <Animated.View style={[styles.flashOverlay, { backgroundColor: flashColor, opacity: flashAnim }]} pointerEvents="none" />
 
       {/* OPZIONE A */}
-      <Pressable style={[styles.fullOption, { backgroundColor: "#FF595E" }]} onPress={() => showResult ? handleNext() : handleGuess("A")}>
+      <Pressable 
+        style={[
+          styles.fullOption, 
+          { backgroundColor: "#FF595E" },
+          userChoice === "A" && styles.selectedBorder // Applica bordo se scelta
+        ]} 
+        onPress={() => showResult ? handleNext() : handleGuess("A")}
+      >
         <View style={styles.contentContainer}>
           <Text style={styles.optionText}>{q?.option_a}</Text>
           {showResult && <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>{stats?.pA.toFixed(0)}%</Animated.Text>}
@@ -151,7 +159,14 @@ export default function PopularGame() {
       <View style={styles.midBadge}><Text style={styles.midText}>OPPURE</Text></View>
 
       {/* OPZIONE B */}
-      <Pressable style={[styles.fullOption, { backgroundColor: "#1982C4" }]} onPress={() => showResult ? handleNext() : handleGuess("B")}>
+      <Pressable 
+        style={[
+          styles.fullOption, 
+          { backgroundColor: "#1982C4" },
+          userChoice === "B" && styles.selectedBorder // Applica bordo se scelta
+        ]} 
+        onPress={() => showResult ? handleNext() : handleGuess("B")}
+      >
         <View style={styles.contentContainer}>
           <Text style={styles.optionText}>{q?.option_b}</Text>
           {showResult && <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>{stats?.pB.toFixed(0)}%</Animated.Text>}
@@ -168,7 +183,7 @@ export default function PopularGame() {
         </View>
       </SafeAreaView>
 
-      {/* MODAL GAME OVER */}
+      {/* MODAL GAME OVER RIMANE UGUALE */}
       <Modal visible={showGameOver} transparent={true} animationType="slide">
         <View style={styles.gameOverContainer}>
           <View style={styles.gameOverContent}>
@@ -202,6 +217,12 @@ const styles = StyleSheet.create({
   scoreLabel: { color: 'white', fontSize: 10, fontWeight: '700', opacity: 0.8 },
   scoreValue: { color: 'white', fontSize: 18, fontWeight: '900' },
   fullOption: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 30 },
+  // STILE PER IL BORDO SELEZIONATO
+  selectedBorder: {
+    borderWidth: 6,
+    borderColor: '#39FF14', // Verde neon
+    zIndex: 5,
+  },
   contentContainer: { alignItems: "center", width: "100%" },
   optionText: { fontSize: 28, fontWeight: "900", color: "white", textAlign: "center", textTransform: "uppercase" },
   statText: { fontSize: 65, fontWeight: "900", color: "rgba(255,255,255,0.8)", marginTop: 20 },
