@@ -2,13 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { useSettings } from "../contexts/SettingsContext"; 
-import { LinearGradient } from "expo-linear-gradient";
+import { useSettings } from "../contexts/SettingsContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Category {
   id: string;
-  name: string;
+  name: string; 
   icon: string;
   iconFamily: "material" | "fontawesome" | "ionicons";
   color: string;

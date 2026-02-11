@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Haptics from "expo-haptics";
+import * as Haptics from "expo-haptics"; 
 
 type Theme = "light" | "dark" | "auto";
 type Language = "it" | "en"; // Preparato per il futuro

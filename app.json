@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "frontend",
+    "sdkVersion": "51.0.0",
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -37,6 +38,7 @@
       ]
     },
     "plugins": [
+      "expo-router",
       [
         "expo-build-properties",
         {
@@ -46,13 +48,17 @@
             "buildToolsVersion": "34.0.0"
           }
         }
-      ]
+      ],
+      "expo-asset"
     ],
+    "owner": "kebeli14",
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
         "projectId": "173f18e0-869f-49a8-9311-ef2c9c9e1951"
       }
-    },
-    "owner": "kebeli14"
+    }
   }
 }
