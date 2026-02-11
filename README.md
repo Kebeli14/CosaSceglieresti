@@ -1,169 +1,50 @@
-# Cosa Sceglieresti? 🎮
+# Welcome to your Expo app 👋
 
-Un gioco mobile stile "Would You Rather" dove gli utenti scelgono tra due opzioni assurde, difficili o ironiche. L'app è veloce, colorata e divertente, pensata per giocare da soli o con amici!
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## ✨ Caratteristiche
+## Get started
 
-### 🎯 Modalità di Gioco
-- **Storico** - Domande su eventi e personaggi storici
-- **Calcistico** - Dilemmi sul mondo del calcio
-- **NBA / Basket** - Scenari sul basket professionistico
-- **Religione** - Domande filosofiche e spirituali
-- **Random** - Mix casuale e divertente di tutte le categorie
+1. Install dependencies
 
-### 🎨 Funzionalità
-- ✅ Interfaccia mobile-first con design moderno
-- ✅ Statistiche in tempo reale condivise tra tutti gli utenti
-- ✅ Feedback tattile (vibrazione) per ogni interazione
-- ✅ Tema chiaro e scuro
-- ✅ Animazioni fluide e coinvolgenti
-- ✅ Database MongoDB per domande e statistiche
-- ✅ Generazione AI di nuove domande (GPT-5.2)
-- ✅ Design responsive per tutti i dispositivi
+   ```bash
+   npm install
+   ```
 
-## 🛠 Tech Stack
+2. Start the app
 
-### Frontend
-- **Expo** - Framework React Native per sviluppo mobile
-- **Expo Router** - Navigazione file-based
-- **React Native** - UI nativa cross-platform
-- **TypeScript** - Type safety
-- **Expo Haptics** - Feedback tattile
-- **AsyncStorage** - Persistenza locale delle impostazioni
-- **Expo Linear Gradient** - Gradienti per le categorie
+   ```bash
+   npx expo start
+   ```
 
-### Backend
-- **FastAPI** - Framework Python moderno per API
-- **MongoDB** - Database NoSQL
-- **Motor** - Driver async MongoDB
-- **Emergent Integrations** - Integrazione LLM (OpenAI GPT-5.2)
+In the output, you'll find options to open the app in a
 
-## 🚀 Come Funziona
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-### Flusso di Gioco
-1. **Home Screen**: Scegli una categoria tra le 5 disponibili
-2. **Schermata di Gioco**: 
-   - Due grandi pulsanti con le opzioni
-   - Cerchio "O" centrale per separare visivamente
-   - Tap su un'opzione per scegliere
-3. **Statistiche**: Dopo la scelta, vedi le percentuali di voto degli altri utenti
-4. **Prossima Domanda**: Continua a giocare nella stessa categoria
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-### Backend API Endpoints
+## Get a fresh project
 
-```
-GET  /api/                          - Health check
-GET  /api/questions?category=...    - Ottieni domande per categoria
-POST /api/choice                     - Registra una scelta utente
-GET  /api/stats/:question_id        - Ottieni statistiche domanda
-POST /api/generate-question         - Genera nuova domanda con AI
-POST /api/seed                       - Seed iniziale del database
-```
+When you're ready, run:
 
-## 📱 Screenshot
-
-```
-┌─────────────────────┐
-│  Cosa Sceglieresti? │
-│                     │
-│  ┌───────────────┐  │
-│  │  🏛️ Storico   │  │
-│  └───────────────┘  │
-│  ┌───────────────┐  │
-│  │  ⚽ Calcio     │  │
-│  └───────────────┘  │
-│  ┌───────────────┐  │
-│  │  🏀 Basket     │  │
-│  └───────────────┘  │
-│  ┌───────────────┐  │
-│  │  🙏 Religione  │  │
-│  └───────────────┘  │
-│  ┌───────────────┐  │
-│  │  🎲 Random     │  │
-│  └───────────────┘  │
-└─────────────────────┘
-```
-
-## 🎯 Esempi di Domande
-
-### Storico
-- Preferiresti vivere nell'Impero Romano al suo apice o nell'Antico Egitto durante la costruzione delle piramidi?
-
-### Calcistico
-- Preferiresti vincere la Champions da panchinaro o perdere la finale da protagonista assoluto?
-
-### Basket
-- Preferiresti 10 anni da role player in NBA o 1 anno da MVP poi finire in Europa?
-
-### Religione
-- Preferiresti parlare direttamente con una divinità o ricevere una prova fisica e tangibile del soprannaturale?
-
-### Random
-- Preferiresti vivere senza internet per un anno con 1 milione di euro o vivere con internet ma guadagnare solo 1000 euro al mese?
-
-## ⚙️ Impostazioni
-
-- **Effetti Sonori**: Attiva/disattiva feedback audio (implementato con haptics per MVP)
-- **Vibrazione**: Abilita/disabilita feedback tattile
-- **Tema**: Scegli tra chiaro e scuro
-
-## 🤖 Generazione AI
-
-L'app utilizza OpenAI GPT-5.2 tramite Emergent LLM Key per generare nuove domande dinamicamente. Ogni categoria ha prompt specifici per generare domande coerenti con il tema.
-
-## 🎨 Design System
-
-### Colori delle Categorie
-- **Storico**: Blu navy (#1e3a8a → #3b82f6)
-- **Calcio**: Verde prato (#16a34a → #22c55e)
-- **Basket**: Arancione (#ea580c → #f97316)
-- **Religione**: Viola (#7c3aed → #a855f7)
-- **Random**: Rosa (#ec4899 → #f472b6)
-
-### Temi
-- **Chiaro**: Background #F5F5F7, Card #FFFFFF
-- **Scuro**: Background #000000, Card #1C1C1E
-
-## 📦 Installazione e Sviluppo
-
-### Prerequisiti
-- Node.js 18+
-- Python 3.11+
-- MongoDB
-- Yarn
-
-### Backend
 ```bash
-cd backend
-pip install -r requirements.txt
-python server.py
+npm run reset-project
 ```
 
-### Frontend
-```bash
-cd frontend
-yarn install
-yarn start
-```
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-### Seed Database
-```bash
-curl -X POST http://localhost:8001/api/seed
-```
+## Learn more
 
-## 🔮 Funzionalità Future (opzionali)
-- [ ] Modalità Party con timer
-- [ ] Sistema di livelli e punti
-- [ ] Domande custom dall'utente
-- [ ] Multilingua
-- [ ] Condivisione su social
-- [ ] Cloud save
-- [ ] Modalità offline
+To learn more about developing your project with Expo, look at the following resources:
 
-## 📄 Licenza
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-© 2025 Cosa Sceglieresti - Sviluppato con ❤️
+## Join the community
 
----
+Join our community of developers creating universal apps.
 
-**Divertiti a giocare! 🎮**
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

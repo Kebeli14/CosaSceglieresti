@@ -18,10 +18,11 @@ import { useSettings } from "../contexts/SettingsContext";
 import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 export default function PopularGame() {
   const router = useRouter();
+  // Estraiamo colors dal context
   const { colors, vibrate } = useSettings();
 
   const [questions, setQuestions] = useState<any[]>([]);
@@ -31,9 +32,8 @@ export default function PopularGame() {
   const [score, setScore] = useState(0);
   const [stats, setStats] = useState<{ pA: number; pB: number } | null>(null);
   const [showGameOver, setShowGameOver] = useState(false);
-  const [userChoice, setUserChoice] = useState<"A" | "B" | null>(null); // Nuovo stato per il bordo
+  const [userChoice, setUserChoice] = useState<"A" | "B" | null>(null);
 
-  // Animazioni
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
   const [flashColor, setFlashColor] = useState("transparent");
@@ -45,14 +45,14 @@ export default function PopularGame() {
   const loadPopularQuestions = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("questions").select("*");
-      if (error) throw error;
+      const { data, error: fetchError } = await supabase.from("questions").select("*");
+      if (fetchError) throw fetchError;
       if (data) {
         const shuffled = [...data].sort(() => Math.random() - 0.5);
         setQuestions(shuffled);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error("Errore caricamento:", e);
     } finally {
       setLoading(false);
     }
@@ -62,31 +62,34 @@ export default function PopularGame() {
     try {
       const currentRecord = await AsyncStorage.getItem("popular_record");
       const recordValue = currentRecord ? parseInt(currentRecord) : 0;
-
       if (finalScore > recordValue) {
         await AsyncStorage.setItem("popular_record", finalScore.toString());
       }
-    } catch (e) {
-      console.error("Errore salvataggio record:", e);
+    } catch (err) {
+      console.error("Errore record:", err);
     }
   };
 
   const handleGuess = async (choice: "A" | "B") => {
-    if (showResult) return;
+    if (showResult || questions.length === 0) return;
 
-    setUserChoice(choice); // Memorizza la scelta per il bordo
+    setUserChoice(choice);
     const q = questions[currentIndex];
-    const total = q.votes_a + q.votes_b;
+    const votesA = q.votes_a || 0;
+    const votesB = q.votes_b || 0;
+    const total = votesA + votesB;
     const safeTotal = total === 0 ? 1 : total;
-    const pA = (q.votes_a / safeTotal) * 100;
-    const pB = (q.votes_b / safeTotal) * 100;
+    
+    const pA = (votesA / safeTotal) * 100;
+    const pB = (votesB / safeTotal) * 100;
 
     setStats({ pA, pB });
     setShowResult(true);
     
-    const isCorrect = choice === "A" ? q.votes_a >= q.votes_b : q.votes_b >= q.votes_a;
+    const isCorrect = choice === "A" ? votesA >= votesB : votesB >= votesA;
     
     setFlashColor(isCorrect ? "#4ADE80" : "#EF4444");
+    
     Animated.sequence([
       Animated.timing(flashAnim, { toValue: 0.4, duration: 100, useNativeDriver: false }),
       Animated.timing(flashAnim, { toValue: 0, duration: 400, useNativeDriver: false }),
@@ -95,10 +98,10 @@ export default function PopularGame() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
 
     if (isCorrect) {
-      vibrate("light");
+      vibrate("light"); 
       setScore(prev => prev + 1);
     } else {
-      vibrate("error");
+      vibrate("medium"); 
       await saveHighScore(score);
       setTimeout(() => setShowGameOver(true), 800);
     }
@@ -110,21 +113,22 @@ export default function PopularGame() {
     setShowResult(false);
     setShowGameOver(false);
     setStats(null);
-    setUserChoice(null); // Reset scelta
+    setUserChoice(null);
     fadeAnim.setValue(0);
     loadPopularQuestions();
   };
 
   const handleNext = () => {
     if (!showResult || showGameOver) return;
-    fadeAnim.setValue(0);
-    setShowResult(false);
-    setStats(null);
-    setUserChoice(null); // Reset scelta per la prossima domanda
+    
     if (currentIndex < questions.length - 1) {
+      fadeAnim.setValue(0);
+      setShowResult(false);
+      setStats(null);
+      setUserChoice(null);
       setCurrentIndex(currentIndex + 1);
     } else {
-      router.navigate("/");
+      router.replace("/");
     }
   };
 
@@ -139,42 +143,56 @@ export default function PopularGame() {
   return (
     <View style={styles.mainContainer}>
       <StatusBar hidden={true} />
-      <Animated.View style={[styles.flashOverlay, { backgroundColor: flashColor, opacity: flashAnim }]} pointerEvents="none" />
+      
+      <Animated.View 
+        style={[styles.flashOverlay, { backgroundColor: flashColor, opacity: flashAnim }]} 
+        pointerEvents="none" 
+      />
 
       {/* OPZIONE A */}
       <Pressable 
         style={[
           styles.fullOption, 
           { backgroundColor: "#FF595E" },
-          userChoice === "A" && styles.selectedBorder // Applica bordo se scelta
+          userChoice === "A" && styles.selectedBorder
         ]} 
-        onPress={() => showResult ? handleNext() : handleGuess("A")}
+        onPress={() => (showResult ? handleNext() : handleGuess("A"))}
       >
         <View style={styles.contentContainer}>
           <Text style={styles.optionText}>{q?.option_a}</Text>
-          {showResult && <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>{stats?.pA.toFixed(0)}%</Animated.Text>}
+          {showResult && stats && (
+            <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>
+              {stats.pA.toFixed(0)}%
+            </Animated.Text>
+          )}
         </View>
       </Pressable>
 
-      <View style={styles.midBadge}><Text style={styles.midText}>OPPURE</Text></View>
+      <View style={styles.midBadge}>
+        <Text style={styles.midText}>OPPURE</Text>
+      </View>
 
       {/* OPZIONE B */}
       <Pressable 
         style={[
           styles.fullOption, 
           { backgroundColor: "#1982C4" },
-          userChoice === "B" && styles.selectedBorder // Applica bordo se scelta
+          userChoice === "B" && styles.selectedBorder
         ]} 
-        onPress={() => showResult ? handleNext() : handleGuess("B")}
+        onPress={() => (showResult ? handleNext() : handleGuess("B"))}
       >
         <View style={styles.contentContainer}>
           <Text style={styles.optionText}>{q?.option_b}</Text>
-          {showResult && <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>{stats?.pB.toFixed(0)}%</Animated.Text>}
+          {showResult && stats && (
+            <Animated.Text style={[styles.statText, { opacity: fadeAnim }]}>
+              {stats.pB.toFixed(0)}%
+            </Animated.Text>
+          )}
         </View>
       </Pressable>
 
       <SafeAreaView style={styles.headerOverlay}>
-        <TouchableOpacity onPress={() => router.navigate("/")} style={styles.backCircle}>
+        <TouchableOpacity onPress={() => router.replace("/")} style={styles.backCircle}>
           <Ionicons name="close" size={28} color="white" />
         </TouchableOpacity>
         <View style={styles.scoreBadge}>
@@ -183,11 +201,12 @@ export default function PopularGame() {
         </View>
       </SafeAreaView>
 
-      {/* MODAL GAME OVER RIMANE UGUALE */}
-      <Modal visible={showGameOver} transparent={true} animationType="slide">
+      <Modal visible={showGameOver} transparent={true} animationType="fade" onRequestClose={() => setShowGameOver(false)}>
         <View style={styles.gameOverContainer}>
           <View style={styles.gameOverContent}>
-            <View style={styles.lossIconContainer}><Ionicons name="skull" size={60} color="white" /></View>
+            <View style={styles.lossIconContainer}>
+              <Ionicons name="skull" size={60} color="white" />
+            </View>
             <Text style={styles.lossTitle}>PECCATO!</Text>
             <View style={styles.finalScoreBox}>
               <Text style={styles.finalScoreLabel}>IL TUO PUNTEGGIO</Text>
@@ -197,7 +216,7 @@ export default function PopularGame() {
               <Text style={styles.retryButtonText}>RIPROVA ORA</Text>
               <Ionicons name="refresh" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.exitTextButton} onPress={() => router.navigate("/")}>
+            <TouchableOpacity style={styles.exitTextButton} onPress={() => router.replace("/")}>
               <Text style={styles.exitText}>Torna alla Home</Text>
             </TouchableOpacity>
           </View>
@@ -208,7 +227,7 @@ export default function PopularGame() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, zIndex: 999 },
+  mainContainer: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   flashOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 9999 },
   headerOverlay: { position: "absolute", top: 40, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000 },
@@ -217,10 +236,9 @@ const styles = StyleSheet.create({
   scoreLabel: { color: 'white', fontSize: 10, fontWeight: '700', opacity: 0.8 },
   scoreValue: { color: 'white', fontSize: 18, fontWeight: '900' },
   fullOption: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 30 },
-  // STILE PER IL BORDO SELEZIONATO
   selectedBorder: {
     borderWidth: 6,
-    borderColor: '#39FF14', // Verde neon
+    borderColor: '#39FF14',
     zIndex: 5,
   },
   contentContainer: { alignItems: "center", width: "100%" },

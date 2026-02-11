@@ -3,13 +3,35 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "rea
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { useAuth } from "../contexts/AuthContext"; // Importa Auth
 
 export default function Online() {
   const { colors, vibrate } = useSettings();
+  const { user } = useAuth(); // Recupera lo stato dell'utente
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const handleAddFriend = () => {
     if (vibrate) vibrate("light");
+
+    // CONTROLLO LOGIN
+    if (!user) {
+      Alert.alert(
+        "Accesso richiesto",
+        "Devi effettuare l'accesso per aggiungere amici e sfidarli online.",
+        [
+          { text: "Annulla", style: "cancel" },
+          { 
+            text: "Vai al Login", 
+            onPress: () => router.push("/login") // Reindirizza al login
+          }
+        ]
+      );
+      return;
+    }
+
+    // Se è loggato, procedi normalmente
     Alert.alert(
       "Aggiungi Amico", 
       "Inserisci lo username dell'amico che vuoi sfidare.",
@@ -26,18 +48,26 @@ export default function Online() {
           style={styles.headerSide} 
           onPress={handleAddFriend}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        ><Ionicons name="person-add-outline" size={24} color={colors.primary} /></TouchableOpacity>
+        >
+          <Ionicons name="person-add-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>
       </View>
+
       <ScrollView contentContainerStyle={styles.center} showsVerticalScrollIndicator={false}>
         <View style={[styles.iconCircle, { backgroundColor: colors.cardBackground }]}>
           <Ionicons name="people-outline" size={80} color={colors.textSecondary} />
         </View>
         <Text style={[styles.text, { color: colors.text }]}>Nessun amico online</Text>
-        <Text style={[styles.subText, { color: colors.textSecondary }]}>Aggiungi i tuoi amici usando il tasto in alto a destra per iniziare a sfidarli!</Text>
+        <Text style={[styles.subText, { color: colors.textSecondary }]}>
+          Aggiungi i tuoi amici usando il tasto in alto a destra per iniziare a sfidarli!
+        </Text>
+        
         <TouchableOpacity 
           style={[styles.mainAddButton, { backgroundColor: colors.primary }]}
           onPress={handleAddFriend}
-        ><Text style={styles.mainAddButtonText}>Trova Amici</Text></TouchableOpacity>
+        >
+          <Text style={styles.mainAddButtonText}>Trova Amici</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
