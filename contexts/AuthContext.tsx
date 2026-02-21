@@ -1,10 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "../lib/supabase";
-import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
-
-// Questo serve per chiudere correttamente il browser dopo il login
-WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextProps {
   user: any | null;
@@ -23,15 +18,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Controllo iniziale della sessione
+    // Controlla sessione esistente al boot
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // 2. Ascolta i cambiamenti di stato (Login/Logout)
+    // Ascolta cambii di stato auth (login/logout/magic link)
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Evento Auth:", _event);
       setUser(session?.user ?? null);
       setLoading(false);
     });
