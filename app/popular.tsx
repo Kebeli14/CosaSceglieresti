@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
 import { supabase } from "../lib/supabase";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 const { width } = Dimensions.get("window");
 
