@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -36,13 +37,12 @@ export default function Index() {
   }, []);
 
   // Ricarica nome e monete ogni volta che la schermata torna in focus
-  useEffect(() => {
-    const unsubscribe = router.subscribe?.(() => {
+  useFocusEffect(
+    useCallback(() => {
       loadName();
       loadCoins();
-    });
-    return unsubscribe;
-  }, []);
+    }, [])
+  );
 
   const loadName = async () => {
     const saved = await AsyncStorage.getItem("display_name");
@@ -98,9 +98,6 @@ export default function Index() {
             <Ionicons name="person" size={24} color={colors.primary} />
           </View>
           <View>
-            <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>
-              {user ? "BENTORNATO," : "CIAO,"}
-            </Text>
             <Text style={[styles.userName, { color: colors.text }]}>
               {user ? displayName : "Accedi al Profilo"}
             </Text>
@@ -200,7 +197,6 @@ const styles = StyleSheet.create({
   header:            { flexDirection: "row", paddingHorizontal: 25, paddingVertical: 15, justifyContent: "space-between", alignItems: "center" },
   profileSection:    { flexDirection: "row", alignItems: "center", gap: 12 },
   avatarContainer:   { width: 45, height: 45, borderRadius: 22.5, justifyContent: "center", alignItems: "center" },
-  welcomeText:       { fontSize: 10, fontWeight: "700", letterSpacing: 0.8 },
   userName:          { fontSize: 16, fontWeight: "800" },
   coinsBadge:        { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
   coinsEmoji:        { fontSize: 15 },

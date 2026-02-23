@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   Animated,
   Pressable,
@@ -17,7 +16,7 @@ import { useSettings } from "../contexts/SettingsContext";
 import { supabase } from "../lib/supabase";
 
 export default function DailyDilemma() {
-  const router = useRouter();
+  const router = useRouter(); 
   const { vibrate } = useSettings();
 
   const [question, setQuestion] = useState<any>(null);
@@ -71,7 +70,7 @@ export default function DailyDilemma() {
 
   const handlePress = async (choice: "A" | "B") => {
     if (showStats) return;
-    vibrate("medium");
+    if (vibrate) vibrate("medium");
     setUserChoice(choice);
     calculateStats(question, choice, true);
     setShowStats(true);
@@ -80,6 +79,10 @@ export default function DailyDilemma() {
 
     await supabase.from("questions").update(choice === "A" ? { votes_a: question.votes_a + 1 } : { votes_b: question.votes_b + 1 }).eq("id", question.id);
     await AsyncStorage.setItem(`voted_${question.id}`, choice);
+  };
+
+  const goBack = () => {
+    router.back();
   };
 
   if (loading) return <View style={[styles.center, { backgroundColor: "#000" }]}><ActivityIndicator size="large" color="#FF595E" /></View>;
@@ -109,10 +112,21 @@ export default function DailyDilemma() {
         </View>
       </Pressable>
 
-      {/* BADGE CENTRALE */}
+      {/* BADGE CENTRALE CON DILEMMA E SETTIMANALE */}
       <View style={styles.midBadgeContainer}>
+        {/* DILEMMA - Sinistra */}
+        <View style={styles.sideBadge}>
+          <Text style={styles.sideBadgeText}>DILEMMA</Text>
+        </View>
+
+        {/* OPPURE - Centro */}
         <View style={styles.midBadge}>
           <Text style={styles.midText}>OPPURE</Text>
+        </View>
+
+        {/* SETTIMANALE - Destra */}
+        <View style={styles.sideBadge}>
+          <Text style={styles.sideBadgeText}>SETTIMANALE</Text>
         </View>
       </View>
 
@@ -136,15 +150,13 @@ export default function DailyDilemma() {
         </View>
       </Pressable>
 
-      {/* HEADER OVERLAY */}
-      <SafeAreaView style={styles.headerOverlay}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backCircle}>
-          <Ionicons name="close" size={28} color="white" />
-        </TouchableOpacity>
-        <View style={styles.weeklyTag}>
-          <Text style={styles.weeklyTagText}>DILEMMA SETTIMANALE</Text>
-        </View>
-      </SafeAreaView>
+      {/* CLOSE BUTTON - Alto destra */}
+      <TouchableOpacity 
+        style={styles.closeButton}
+        onPress={goBack}
+      >
+        <Ionicons name="close" size={24} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -152,29 +164,29 @@ export default function DailyDilemma() {
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  headerOverlay: { 
-    position: "absolute", top: 50, left: 20, zIndex: 1000, 
-    flexDirection: 'row', alignItems: 'center' 
+  closeButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+    padding: 8
   },
-  backCircle: { 
-    width: 44, height: 44, borderRadius: 22, 
-    backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", alignItems: "center" 
-  },
-  weeklyTag: { 
-    backgroundColor: '#FFD700', paddingHorizontal: 12, 
-    paddingVertical: 6, borderRadius: 20, marginLeft: 10 
-  },
-  weeklyTagText: { color: '#000', fontWeight: '900', fontSize: 11 },
   fullOption: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center", 
     paddingHorizontal: 30,
-    borderWidth: 0, // Default senza bordo
+    borderWidth: 0,
   },
   selectedBorder: {
     borderWidth: 6,
-    borderColor: '#39FF14', // Verde Neon
+    borderColor: '#39FF14',
     zIndex: 5,
   },
   contentContainer: { alignItems: "center", width: "100%" },
@@ -186,13 +198,43 @@ const styles = StyleSheet.create({
     fontSize: 65, fontWeight: "900", color: "rgba(255,255,255,0.8)", marginTop: 10 
   },
   midBadgeContainer: {
-    position: 'absolute', top: '50%', left: '50%', 
-    zIndex: 10, marginLeft: -55, marginTop: -25
+    position: 'absolute', 
+    top: '50%', 
+    left: '50%', 
+    zIndex: 10, 
+    marginLeft: -230,
+    marginTop: -25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: 460
   },
   midBadge: { 
-    width: 110, height: 50, backgroundColor: "#111", 
-    borderRadius: 25, justifyContent: "center", 
-    alignItems: "center", borderWidth: 3, borderColor: "white" 
+    width: 110, 
+    height: 50, 
+    backgroundColor: "#111", 
+    borderRadius: 25, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    borderWidth: 3, 
+    borderColor: "white" 
   },
-  midText: { color: "white", fontWeight: "900", fontSize: 15, letterSpacing: 1 },
+  midText: { 
+    color: "white", 
+    fontWeight: "900", 
+    fontSize: 15, 
+    letterSpacing: 1 
+  },
+  sideBadge: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12
+  },
+  sideBadgeText: {
+    color: '#000',
+    fontWeight: '900',
+    fontSize: 10,
+    letterSpacing: 0.5
+  }
 });

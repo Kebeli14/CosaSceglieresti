@@ -264,6 +264,11 @@ export default function Profile() {
     router.push("/settings");
   };
 
+  const openEditName = () => {
+    if (vibrate) vibrate("light");
+    setEditModalVisible(true);
+  };
+
   const saveName = async () => {
     if (newName.trim().length === 0) return;
     const trimmed = newName.trim();
@@ -277,7 +282,13 @@ export default function Profile() {
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
 
       <View style={styles.header}>
-        <View style={styles.headerSide} />
+        <TouchableOpacity
+          style={styles.headerSide}
+          onPress={openEditName}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="pencil-outline" size={24} color={colors.text} />
+        </TouchableOpacity>
         <Text style={[styles.standardTitle, { color: colors.text }]}>Profilo</Text>
         <TouchableOpacity
           style={styles.headerSide}
@@ -301,12 +312,6 @@ export default function Profile() {
                   <Ionicons name="person" size={60} color={colors.textSecondary} />
                 )}
               </View>
-              <TouchableOpacity
-                style={[styles.editBadge, { backgroundColor: colors.primary }]}
-                onPress={() => { if (vibrate) vibrate("light"); setEditModalVisible(true); }}
-              >
-                <Ionicons name="pencil" size={13} color="#fff" />
-              </TouchableOpacity>
             </View>
 
             {/* Nome, email, data iscrizione */}
@@ -386,10 +391,9 @@ const styles = StyleSheet.create({
   headerSide:      { width: 40, alignItems: "center", justifyContent: "center" },
   standardTitle:   { fontSize: 22, fontWeight: "800", textAlign: "center", flex: 1 },
   content:         { paddingHorizontal: 25, alignItems: "center", paddingTop: 20, paddingBottom: 40 },
-  avatarContainer: { position: "relative", marginBottom: 15 },
+  avatarContainer: { marginBottom: 15 },
   avatarWrapper:   { width: 120, height: 120, borderRadius: 60, borderWidth: 3, justifyContent: "center", alignItems: "center", overflow: "hidden" },
   avatar:          { width: "100%", height: "100%" },
-  editBadge:       { position: "absolute", bottom: 2, right: 2, width: 28, height: 28, borderRadius: 14, justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#fff" },
   userName:        { fontSize: 24, fontWeight: "800" },
   userEmail:       { fontSize: 14, marginTop: 5 },
   joinRow:         { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6 },

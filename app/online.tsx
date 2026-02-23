@@ -343,6 +343,7 @@ const styles = StyleSheet.create({
   resultBox:       { borderRadius: 16, padding: 16, alignItems: "center", gap: 10 },
   resultAvatar:    { width: 56, height: 56, borderRadius: 28, justifyContent: "center", alignItems: "center" },
   resultName:      { fontSize: 18, fontWeight: "800" },
+  resultNotFound:  { fontSize: 15, fontWeight: "600", textAlign: "center", marginTop: 4 },
   alreadyBadge:    { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   addBtn:          { paddingHorizontal: 28, paddingVertical: 10, borderRadius: 14 },
   addBtnText:      { color: "#fff", fontWeight: "800", fontSize: 15 },
