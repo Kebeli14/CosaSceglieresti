@@ -167,7 +167,7 @@ export default function Login() {
           </Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {mode === "email"
-              ? isSignUp ? "Registrati per salvare progressi e giocare online." : "Accedi per continuare."
+              ? isSignUp ? "Registrati per salvare progressi." : "Accedi per continuare."
               : "Niente password! Ti mandiamo un link via email."}
           </Text>
 
