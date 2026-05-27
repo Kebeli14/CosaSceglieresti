@@ -6,6 +6,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSettings } from "../contexts/SettingsContext";
+import { useUser } from "../contexts/UserContext";
 
 // ─── Ricompense dei 7 giorni ──────────────────────────────────────────────────
 const REWARDS = [
@@ -40,6 +41,7 @@ type Props = {
 
 export default function DailyReward({ onClose }: Props) {
   const { colors, vibrate } = useSettings();
+  const { addCoins } = useUser();
 
   const [visible, setVisible]         = useState(false);
   const [streak, setStreak]           = useState(1);
@@ -98,10 +100,8 @@ export default function DailyReward({ onClose }: Props) {
     await AsyncStorage.setItem(STORAGE_KEY_LAST, today.toISOString());
     await AsyncStorage.setItem(STORAGE_KEY_STREAK, streak.toString());
 
-    // Aggiorna monete
-    const savedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
-    const current = savedCoins ? parseInt(savedCoins) : 0;
-    await AsyncStorage.setItem(STORAGE_KEY_COINS, (current + reward.coins).toString());
+    // Aggiorna monete tramite UserContext (aggiorna anche lo stato in-memory)
+    await addCoins(reward.coins);
 
     setClaimed(true);
 

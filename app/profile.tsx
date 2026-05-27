@@ -8,10 +8,12 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useUser, AVATAR_COLORS, COLOR_PRICE } from "../contexts/UserContext";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,10 +21,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // ─── Configurazione livelli ───────────────────────────────────────────────────
 const LEVELS = [
   { level: 1, label: "Novizio",  xpRequired: 0    },
-  { level: 2, label: "Curioso",  xpRequired: 100  },
-  { level: 3, label: "Esperto",  xpRequired: 300  },
-  { level: 4, label: "Veterano", xpRequired: 600  },
-  { level: 5, label: "Leggenda", xpRequired: 1000 },
+  { level: 2, label: "Curioso",  xpRequired: 50   },
+  { level: 3, label: "Esperto",  xpRequired: 150  },
+  { level: 4, label: "Veterano", xpRequired: 350  },
+  { level: 5, label: "Leggenda", xpRequired: 700  },
 ];
 
 function getLevelInfo(xp: number) {
@@ -218,17 +220,17 @@ const badgeStyles = StyleSheet.create({
 export default function Profile() {
   const { colors, vibrate } = useSettings();
   const { user, signOut } = useAuth();
+  const { username, coins, avatarColor, purchasedColors, bestStreak, questionsAnswered, dailyStreak, purchaseColor, selectColor } = useUser();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // 👇 Hardcodato per ora — sostituisci con dati reali da Supabase in futuro
-  const xp        = 120;
-  const streak    = 4;
-  const questions = 15;
-
-  const badges = getBadges(xp, streak, questions);
+  // XP calcolata dai dati reali:
+  // ogni domanda risposta = 3 XP, ogni punto di best streak = 5 XP, ogni giorno login = 8 XP
+  const xp      = questionsAnswered * 3 + bestStreak * 5 + dailyStreak * 8;
+  const badges  = getBadges(xp, dailyStreak, questionsAnswered);
 
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [colorPickerVisible, setColorPickerVisible] = useState(false);
   const [newName, setNewName] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
 
@@ -303,18 +305,27 @@ export default function Profile() {
         {user ? (
           <View style={styles.authSection}>
 
-            {/* Avatar */}
-            <View style={styles.avatarContainer}>
-              <View style={[styles.avatarWrapper, { borderColor: colors.primary }]}>
-                {user.user_metadata?.avatar_url ? (
-                  <Image source={{ uri: user.user_metadata.avatar_url }} style={styles.avatar} />
-                ) : (
-                  <Ionicons name="person" size={60} color={colors.textSecondary} />
-                )}
+            {/* Avatar cliccabile con colore personalizzabile */}
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={() => setColorPickerVisible(true)}
+              activeOpacity={0.85}
+            >
+              <View style={[styles.avatarWrapper, { backgroundColor: avatarColor + "25", borderColor: avatarColor }]}>
+                <Text style={[styles.avatarLetter, { color: avatarColor }]}>
+                  {(username ?? displayName ?? "?")[0]?.toUpperCase()}
+                </Text>
               </View>
-            </View>
+              {/* Badge modifica */}
+              <View style={[styles.editBadge, { backgroundColor: avatarColor }]}>
+                <Ionicons name="color-palette-outline" size={13} color="#fff" />
+              </View>
+            </TouchableOpacity>
 
-            {/* Nome, email, data iscrizione */}
+            {/* Username + nome */}
+            {username && (
+              <Text style={[styles.usernameTag, { color: avatarColor }]}>@{username}</Text>
+            )}
             <Text style={[styles.userName, { color: colors.text }]}>{displayName}</Text>
             <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user.email}</Text>
             {user.created_at && (
@@ -326,17 +337,33 @@ export default function Profile() {
               </View>
             )}
 
+            {/* Stats rapide */}
+            <View style={[styles.statsRow, { backgroundColor: colors.cardBackground }]}>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: colors.text }]}>🔥 {bestStreak}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Miglior Streak</Text>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: colors.background }]} />
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: colors.text }]}>❓ {questionsAnswered}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Domande</Text>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: colors.background }]} />
+              <View style={styles.statItem}>
+                <View style={styles.statCoinRow}>
+                  <View style={styles.miniCoin}><Text style={styles.miniCoinText}>C</Text></View>
+                  <Text style={[styles.statValue, { color: colors.text }]}>{coins}</Text>
+                </View>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Monete</Text>
+              </View>
+            </View>
+
             {/* XP + Badge */}
             <View style={styles.sections}>
               <XPBar xp={xp} colors={colors} />
               <BadgeGrid badges={badges} colors={colors} />
             </View>
 
-            {/* Logout */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="#ff4444" />
-              <Text style={styles.logoutText}>Disconnetti</Text>
-            </TouchableOpacity>
 
           </View>
         ) : (
@@ -354,6 +381,87 @@ export default function Profile() {
           </View>
         )}
       </ScrollView>
+
+      {/* Modal color picker avatar */}
+      <Modal visible={colorPickerVisible} transparent animationType="fade" onRequestClose={() => setColorPickerVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>🎨 Colore Avatar</Text>
+            <Text style={[styles.modalSub, { color: colors.textSecondary }]}>
+              Ogni colore costa {COLOR_PRICE} monete. Hai {coins} monete.
+            </Text>
+            <View style={styles.colorGrid}>
+              {AVATAR_COLORS.map((c) => {
+                const owned = c.free || purchasedColors.includes(c.id);
+                const isActive = avatarColor === c.hex;
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[
+                      styles.colorItem,
+                      { backgroundColor: c.hex + "20", borderColor: isActive ? c.hex : "transparent", borderWidth: isActive ? 3 : 1.5 },
+                    ]}
+                    onPress={async () => {
+                      if (owned) {
+                        await selectColor(c.id);
+                        if (vibrate) vibrate("light");
+                      } else {
+                        if (coins < COLOR_PRICE) {
+                          Alert.alert("Monete insufficienti", `Ti servono ${COLOR_PRICE} monete. Ne hai ${coins}.`);
+                          return;
+                        }
+                        Alert.alert(
+                          `Acquista ${c.label}`,
+                          `Vuoi spendere ${COLOR_PRICE} monete per questo colore?`,
+                          [
+                            { text: "Annulla", style: "cancel" },
+                            {
+                              text: "Acquista", onPress: async () => {
+                                const ok = await purchaseColor(c.id);
+                                if (!ok) Alert.alert("Errore", "Acquisto non riuscito");
+                                else if (vibrate) vibrate("medium");
+                              }
+                            },
+                          ]
+                        );
+                      }
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[styles.colorCircle, { backgroundColor: c.hex }]}>
+                      {isActive && <Ionicons name="checkmark" size={20} color="#fff" />}
+                    </View>
+                    <Text
+                      style={[styles.colorLabel, { color: colors.text }]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                    >
+                      {c.label}
+                    </Text>
+                    {owned ? (
+                      c.free
+                        ? <Text style={[styles.colorPrice, { color: "#4ade80" }]} numberOfLines={1}>Gratis</Text>
+                        : <Text style={[styles.colorPrice, { color: "#4ade80" }]} numberOfLines={1}>✓ Tuo</Text>
+                    ) : (
+                      <View style={styles.colorPriceRow}>
+                        <View style={styles.miniCoin}><Text style={styles.miniCoinText}>C</Text></View>
+                        <Text style={[styles.colorPrice, { color: "#FFD700" }]} numberOfLines={1}>{COLOR_PRICE}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <TouchableOpacity
+              style={[styles.modalSave, { backgroundColor: colors.primary, width: "100%", alignItems: "center", paddingVertical: 14 }]}
+              onPress={() => setColorPickerVisible(false)}
+            >
+              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>Chiudi</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal modifica nome */}
       <Modal visible={editModalVisible} transparent animationType="fade" onRequestClose={() => setEditModalVisible(false)}>
@@ -391,12 +499,30 @@ const styles = StyleSheet.create({
   headerSide:      { width: 40, alignItems: "center", justifyContent: "center" },
   standardTitle:   { fontSize: 22, fontWeight: "800", textAlign: "center", flex: 1 },
   content:         { paddingHorizontal: 25, alignItems: "center", paddingTop: 20, paddingBottom: 40 },
-  avatarContainer: { marginBottom: 15 },
-  avatarWrapper:   { width: 120, height: 120, borderRadius: 60, borderWidth: 3, justifyContent: "center", alignItems: "center", overflow: "hidden" },
+  avatarContainer: { marginBottom: 6, position: "relative" },
+  avatarWrapper:   { width: 120, height: 120, borderRadius: 60, borderWidth: 3, justifyContent: "center", alignItems: "center" },
+  avatarLetter:    { fontSize: 52, fontWeight: "900" },
+  editBadge:       { position: "absolute", bottom: 4, right: 4, width: 28, height: 28, borderRadius: 14, justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#fff" },
+  usernameTag:     { fontSize: 15, fontWeight: "800", marginBottom: 4, marginTop: 4 },
   avatar:          { width: "100%", height: "100%" },
-  userName:        { fontSize: 24, fontWeight: "800" },
-  userEmail:       { fontSize: 14, marginTop: 5 },
+  userName:        { fontSize: 22, fontWeight: "800" },
+  userEmail:       { fontSize: 14, marginTop: 4 },
   joinRow:         { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6 },
+  statsRow:        { flexDirection: "row", borderRadius: 18, marginTop: 18, marginBottom: 4, width: "100%", overflow: "hidden" },
+  statItem:        { flex: 1, alignItems: "center", paddingVertical: 16 },
+  statDivider:     { width: 1 },
+  statValue:       { fontSize: 20, fontWeight: "900" },
+  statLabel:       { fontSize: 12, marginTop: 3, fontWeight: "600", opacity: 0.7 },
+  statCoinRow:     { flexDirection: "row", alignItems: "center", gap: 6 },
+  miniCoin:        { width: 22, height: 22, borderRadius: 11, backgroundColor: "#FFD700", justifyContent: "center", alignItems: "center" },
+  miniCoinText:    { color: "#7a5c00", fontWeight: "900", fontSize: 11 },
+  colorGrid:       { flexDirection: "row", flexWrap: "wrap", gap: 10, width: "100%", justifyContent: "center", marginBottom: 16, marginTop: 8 },
+  colorItem:       { width: "22%", borderRadius: 14, padding: 10, alignItems: "center", gap: 5 },
+  colorCircle:     { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center" },
+  colorLabel:      { fontSize: 11, fontWeight: "700", textAlign: "center", width: "100%" },
+  colorPrice:      { fontSize: 11, fontWeight: "800", textAlign: "center" },
+  colorPriceRow:   { flexDirection: "row", alignItems: "center", gap: 3, justifyContent: "center" },
+  modalSub:        { fontSize: 13, textAlign: "center", marginBottom: 4 },
   joinText:        { fontSize: 12 },
   sections:        { width: "100%", marginTop: 24 },
   logoutButton:    { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, padding: 15, marginTop: 10 },

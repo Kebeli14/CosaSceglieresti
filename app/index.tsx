@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -7,13 +7,12 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useUser } from "../contexts/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import DailyReward from "../components/Dailyreward";
 
 export default function Index() {
@@ -21,38 +20,15 @@ export default function Index() {
   const insets = useSafeAreaInsets();
   const { colors, vibrate } = useSettings();
   const { user } = useAuth();
+  const { coins, username, avatarColor } = useUser();
 
-  const [popularRecord, setPopularRecord] = useState(0);
-  const [timeLeft, setTimeLeft] = useState("");
-  const [displayName, setDisplayName] = useState("Giocatore");
-  const [coins, setCoins] = useState(0);
+  const [timeLeft, setTimeLeft] = React.useState("");
 
-  useEffect(() => {
-    loadRecord();
-    loadName();
-    loadCoins();
+  React.useEffect(() => {
     updateCountdown();
-
     const timer = setInterval(updateCountdown, 60000);
     return () => clearInterval(timer);
   }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadName();
-      loadCoins();
-    }, [])
-  );
-
-  const loadName = async () => {
-    const saved = await AsyncStorage.getItem("display_name");
-    setDisplayName(saved ?? user?.user_metadata?.full_name ?? "Giocatore");
-  };
-
-  const loadCoins = async () => {
-    const saved = await AsyncStorage.getItem("coins");
-    setCoins(saved ? parseInt(saved) : 0);
-  };
 
   const updateCountdown = () => {
     const now = new Date();
@@ -73,11 +49,6 @@ export default function Index() {
     setTimeLeft(d > 0 ? `${d}g ${h}h` : `${h}h ${m}m`);
   };
 
-  const loadRecord = async () => {
-    const saved = await AsyncStorage.getItem("popular_record");
-    if (saved) setPopularRecord(parseInt(saved));
-  };
-
   const navigateTo = (path) => {
     if (vibrate) vibrate("light");
     router.push(path);
@@ -86,21 +57,27 @@ export default function Index() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       
-      <DailyReward onClose={loadCoins} />
+      <DailyReward />
 
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.profileSection} onPress={() => navigateTo("/profile")}>
-          <View style={[styles.avatarContainer, { backgroundColor: colors.cardBackground }]}>
-            <Ionicons name="person" size={24} color={colors.primary} />
+          {/* Avatar colorato con iniziale username */}
+          <View style={[styles.avatarContainer, { backgroundColor: avatarColor + "30", borderColor: avatarColor, borderWidth: 2 }]}>
+            <Text style={[styles.avatarInitial, { color: avatarColor }]}>
+              {username ? username[0].toUpperCase() : "?"}
+            </Text>
           </View>
           <Text style={[styles.userName, { color: colors.text }]}>
-            {user ? displayName : "Accedi al Profilo"}
+            {username ?? (user ? "Profilo" : "Accedi")}
           </Text>
         </TouchableOpacity>
 
+        {/* Badge monete stilizzato */}
         <View style={styles.coinsBadge}>
-          <Text style={styles.coinsEmoji}>🪙</Text>
+          <View style={styles.coinCircle}>
+            <Text style={styles.coinSymbol}>C</Text>
+          </View>
           <Text style={styles.coinsText}>{coins}</Text>
         </View>
       </View>
@@ -177,6 +154,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  avatarInitial: {
+    fontSize: 20,
+    fontWeight: "900",
+  },
 
   userName: {
     fontWeight: "800",
@@ -185,18 +166,37 @@ const styles = StyleSheet.create({
 
   coinsBadge: {
     flexDirection: "row",
-    backgroundColor: "#FFD70020",
-    padding: 8,
-    borderRadius: 10,
+    backgroundColor: "#FFD70018",
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     alignItems: "center",
-    gap: 5,
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: "#FFD70040",
   },
-
-  coinsEmoji: { fontSize: 14 },
-
+  coinCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFD700",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  coinSymbol: {
+    color: "#7a5c00",
+    fontWeight: "900",
+    fontSize: 13,
+  },
   coinsText: {
     color: "#FFD700",
     fontWeight: "900",
+    fontSize: 16,
   },
 
   scrollContent: {

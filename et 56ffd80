@@ -1,0 +1,27 @@
+[33m7b0100e[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m Fix AdMob APPLICATION_ID, leaderboard, magic link, username post-login
+[33mb4020fa[m fix: top 30 leaderboard with dedup, coin icon in color picker, no text wrapping
+[33m0f9deee[m fix: new splash screen - light blue background with centered logo, no black/white
+[33m2f59760[m fix: resolve AdMob APPLICATION_ID manifest merger conflict
+[33ma5c4a9f[m fix: add AdMob Application ID to AndroidManifest to prevent native crash
+[33m5cc9a3e[m debug: add error boundary to show crash reason on screen
+[33m4bd6837[m fix: add Supabase env vars to EAS build config
+[33mf05a839[m fix: add AdMob app ID config to prevent startup crash
+[33m6ab156b[m fix: downgrade AGP to 8.10.1 to fix composite build variant conflict
+[33m1f2fe1e[m fix: pin Gradle to 8.13 for AGP 8.11 compatibility
+[33m56ffd80[m[33m ([m[1;31morigin/master[m[33m)[m Rimosso tab amici
+[33m34cbf57[m rimosso questions.json
+[33mbeec1ac[m Piccole modifiche qua e la
+[33mf079f28[m piccoli miglioramenti qua e la
+[33m36ef418[m sistemato autentificazione tramite email e password, da fare quella con goole e nel caso conferma email
+[33m3d0fb7a[m Fix: ho rimosso la cartella frontend, e sono riuscito a buildare l'apk su huawei
+[33ma13e2ef[m Fix: allineamento dipendenze SDK 51 e plugin
+[33m51b7152[m Spostamento definitivo file e ripristino configurazione
+[33m01e494a[m aggiornamento grafico e ho aggiunto il file dilemma del giorno
+[33mdd9ef7d[m modifica design del gioco, e aggiunta della modalità popolare
+[33m1059afa[m nuova schermata principale, aggiunta di una barra con 4 icone: home, online, classifica e profilo
+[33m21d649a[m Picoole modifiche qua e la
+[33m0605363[m Aggiornamento app, ho aggiunto nuove modalità di gioco e l'hamburgemenu con dentro l'opzione login e le impostazioni
+[33mb40135d[m Rimozione MongoDB e ho convertito tutto in Supabase
+[33m749e72d[m Remove env from repo and add Supabase client
+[33m49fdc47[m Aggiornamento di tutti i file
+[33m7de3604[m Primo commit: progetto iniziale

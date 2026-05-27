@@ -8,9 +8,9 @@
     "userInterfaceStyle": "light",
     "scheme": "frontend",
     "splash": {
-      "image": "./assets/images/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/images/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#CDEAF8"
     },
     "ios": {
       "supportsTablet": true,
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#B7DCEE"
       },
       "package": "com.cosasceglieresti.app",
       "intentFilters": [
@@ -48,7 +48,14 @@
           }
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+          "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ]
     ],
     "owner": "kebeli14",
     "extra": {

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert } f
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
+import { useAuth } from "../contexts/AuthContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Settings() {
@@ -18,6 +19,29 @@ export default function Settings() {
     colors,
     vibrate,
   } = useSettings();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = () => {
+    Alert.alert(
+      "Disconnetti",
+      "Sei sicuro di voler uscire dal tuo account?",
+      [
+        { text: "Annulla", style: "cancel" },
+        {
+          text: "Disconnetti",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace("/");
+            } catch (e) {
+              Alert.alert("Errore", "Impossibile disconnettersi. Riprova.");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleBack = () => {
     if (vibrate) vibrate("light");
@@ -50,12 +74,14 @@ export default function Settings() {
                 <Ionicons name="volume-high-outline" size={24} color={colors.primary} />
                 <Text style={[styles.settingTitle, { color: colors.text, marginLeft: 15 }]}>Effetti sonori</Text>
               </View>
-              <Switch
-                value={soundEnabled}
-                onValueChange={toggleSound}
-                trackColor={{ false: "#d1d5db", true: colors.primary }}
-                thumbColor="#ffffff"
-              />
+              <View style={styles.switchWrapper}>
+                <Switch
+                  value={soundEnabled}
+                  onValueChange={toggleSound}
+                  trackColor={{ false: "#d1d5db", true: colors.primary }}
+                  thumbColor="#ffffff"
+                />
+              </View>
             </View>
             <View style={[styles.divider, { backgroundColor: colors.background }]} />
             <View style={styles.settingRow}>
@@ -63,12 +89,14 @@ export default function Settings() {
                 <Ionicons name="phone-portrait-outline" size={24} color={colors.primary} />
                 <Text style={[styles.settingTitle, { color: colors.text, marginLeft: 15 }]}>Vibrazione</Text>
               </View>
-              <Switch
-                value={vibrationEnabled}
-                onValueChange={toggleVibration}
-                trackColor={{ false: "#d1d5db", true: colors.primary }}
-                thumbColor="#ffffff"
-              />
+              <View style={styles.switchWrapper}>
+                <Switch
+                  value={vibrationEnabled}
+                  onValueChange={toggleVibration}
+                  trackColor={{ false: "#d1d5db", true: colors.primary }}
+                  thumbColor="#ffffff"
+                />
+              </View>
             </View>
           </View>
         </View>
@@ -125,6 +153,19 @@ export default function Settings() {
           </View>
         </View>
 
+        {user && (
+          <View style={[styles.section, { marginTop: 8 }]}>
+            <TouchableOpacity
+              style={[styles.logoutBtn, { backgroundColor: "#ef4444" + "15", borderColor: "#ef4444" + "40" }]}
+              onPress={handleSignOut}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#ef4444" />
+              <Text style={styles.logoutText}>Disconnetti account</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.textSecondary }]}>Cosa Sceglieresti? © 2026</Text>
         </View>
@@ -157,8 +198,9 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: 20, marginBottom: 20 },
   sectionTitle: { fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, paddingHorizontal: 4 },
   card: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 },
-  settingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 56 },
+  settingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, minHeight: 56 },
   settingInfo: { flexDirection: "row", alignItems: "center", flex: 1 },
+  switchWrapper: { justifyContent: "center", alignItems: "center" },
   settingTitle: { fontSize: 16, fontWeight: "600" },
   themeRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 56 },
   divider: { height: 1 },
@@ -169,4 +211,6 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 14 },
   footer: { paddingVertical: 30, alignItems: "center" },
   footerText: { fontSize: 12, fontWeight: "500", opacity: 0.5 },
+  logoutBtn: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 16, paddingHorizontal: 20, borderRadius: 16, borderWidth: 1 },
+  logoutText: { fontSize: 16, fontWeight: "700", color: "#ef4444" },
 });

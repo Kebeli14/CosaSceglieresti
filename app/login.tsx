@@ -118,7 +118,10 @@ export default function Login() {
     if (vibrate) vibrate("medium");
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: "frontend://login" },
+      });
       if (error) throw error;
       setMode("confirm");
     } catch (err: any) {

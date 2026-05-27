@@ -15,7 +15,13 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
+import { useUser } from "../contexts/UserContext";
 import { supabase } from "../lib/supabase";
+// ── ADS (attiva dopo aver fatto la development build) ──────────────────────
+// import { InterstitialAd, AdEventType } from "react-native-google-mobile-ads";
+// import { trackQuestionAndCheckAd, AD_UNIT_INTERSTITIAL } from "../lib/ads";
+// const interstitial = InterstitialAd.createForAdRequest(AD_UNIT_INTERSTITIAL);
+// ───────────────────────────────────────────────────────────────────────────
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,6 +29,7 @@ export default function Game() {
   const router = useRouter();
   const { category } = useLocalSearchParams();
   const { colors, vibrate } = useSettings();
+  const { incrementQuestions } = useUser();
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,6 +72,16 @@ export default function Game() {
     }
 
     vibrate("medium");
+    incrementQuestions();
+
+    // ── ADS: traccia domanda e mostra video se sono 50 ──────────────────
+    // const showAd = await trackQuestionAndCheckAd();
+    // if (showAd) {
+    //   interstitial.load();
+    //   interstitial.addAdEventListener(AdEventType.LOADED, () => interstitial.show());
+    // }
+    // ────────────────────────────────────────────────────────────────────
+
     const q = questions[currentIndex];
     const totalVotes = q.votes_a + q.votes_b + 1;
     

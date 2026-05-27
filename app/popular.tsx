@@ -15,14 +15,23 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSettings } from "../contexts/SettingsContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useUser } from "../contexts/UserContext";
+// ── ADS (attiva dopo aver fatto la development build) ──────────────────────
+// import { InterstitialAd, AdEventType } from "react-native-google-mobile-ads";
+// import { trackQuestionAndCheckAd, AD_UNIT_INTERSTITIAL } from "../lib/ads";
+// const interstitial = InterstitialAd.createForAdRequest(AD_UNIT_INTERSTITIAL);
+// ───────────────────────────────────────────────────────────────────────────
 import { supabase } from "../lib/supabase";
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
 export default function PopularGame() {
   const router = useRouter();
   const { colors, vibrate } = useSettings();
+  const { user } = useAuth();
+  const { username, updateBestStreak, incrementQuestions } = useUser();
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -58,20 +67,58 @@ export default function PopularGame() {
   };
 
   const saveHighScore = async (finalScore: number) => {
+    if (finalScore <= 0) return;
     try {
-      const currentRecord = await AsyncStorage.getItem("popular_record");
-      const recordValue = currentRecord ? parseInt(currentRecord) : 0;
-      if (finalScore > recordValue) {
-        await AsyncStorage.setItem("popular_record", finalScore.toString());
+      // 1. Aggiorna sempre il record locale
+      await updateBestStreak(finalScore);
+
+      // 2. Salva in classifica SOLO se l'utente è loggato
+      if (!user?.id) return;
+
+      const displayName = username || "Utente";
+
+      const { data: existing, error: selectErr } = await supabase
+        .from("leaderboard")
+        .select("id, score")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (selectErr) throw selectErr;
+
+      if (existing) {
+        if (finalScore > existing.score) {
+          const { error: updateErr } = await supabase
+            .from("leaderboard")
+            .update({ score: finalScore, display_name: displayName })
+            .eq("id", existing.id);
+          if (updateErr) throw updateErr;
+        }
+      } else {
+        const { error: insertErr } = await supabase
+          .from("leaderboard")
+          .insert({ display_name: displayName, score: finalScore, user_id: user.id });
+        if (insertErr) throw insertErr;
       }
-    } catch (err) {
-      console.error("Errore record:", err);
+    } catch (err: any) {
+      console.error(
+        "Errore salvataggio punteggio:",
+        err?.message ?? err?.code ?? JSON.stringify(err)
+      );
     }
   };
 
   const handleGuess = async (choice: "A" | "B") => {
     if (showResult || questions.length === 0) return;
 
+    // ── ADS: traccia domanda e mostra video se sono 50 ──────────────────
+    // const showAd = await trackQuestionAndCheckAd();
+    // if (showAd) {
+    //   interstitial.load();
+    //   interstitial.addAdEventListener(AdEventType.LOADED, () => interstitial.show());
+    // }
+    // ────────────────────────────────────────────────────────────────────
+
+    incrementQuestions();
     setUserChoice(choice);
     const q = questions[currentIndex];
     const votesA = q.votes_a || 0;
