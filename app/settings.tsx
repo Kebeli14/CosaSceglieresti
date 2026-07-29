@@ -45,7 +45,7 @@ export default function Settings() {
 
   const handleBack = () => {
     if (vibrate) vibrate("light");
-    router.navigate("/profile"); 
+    router.navigate("/");
   };
 
   const handleThemeChange = (newTheme: "light" | "dark") => {

@@ -105,7 +105,7 @@ export default function Game() {
       setStats(null);
       setCurrentIndex(currentIndex + 1);
     } else {
-      router.navigate("/categories");
+      router.navigate("/");
     }
   };
 
@@ -161,7 +161,7 @@ export default function Game() {
       {/* TASTO X */}
       <SafeAreaView style={styles.headerOverlay}>
         <TouchableOpacity 
-          onPress={() => router.navigate("/categories")} 
+          onPress={() => router.navigate("/")}
           style={styles.backCircle}
         >
           <Ionicons name="close" size={28} color="white" />

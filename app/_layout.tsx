@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 import { SettingsProvider, useSettings } from "../contexts/SettingsContext";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { UserProvider, useUser } from "../contexts/UserContext";
@@ -175,49 +175,19 @@ function DeepLinkHandler() {
   return null;
 }
 
-// ─── Layout principale con tab bar ────────────────────────────────────────────
+// ─── Layout principale a schermata unica (nessuna tab bar) ────────────────────
 function LayoutContent() {
-  const { colors }: any = useSettings();
-
   return (
     <>
       <DeepLinkHandler />
       <UsernameSetup />
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: colors?.primary || "#3b82f6",
-          tabBarInactiveTintColor: colors?.textSecondary || "#666",
-          tabBarStyle: {
-            backgroundColor: colors?.cardBackground || "#fff",
-            height: 75,
-            paddingBottom: 10,
-            paddingTop: 10,
-            borderTopWidth: 1,
-            borderTopColor: colors?.border || "#eee",
-          },
-          tabBarItemStyle: { flex: 1 },
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{ title: "Home", tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} /> }}
-        />
-        <Tabs.Screen
-          name="leaderboard"
-          options={{ title: "Classifica", tabBarIcon: ({ color }) => <Ionicons name="trophy" size={24} color={color} /> }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{ title: "Profilo", tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} /> }}
-        />
-        <Tabs.Screen name="login"        options={{ href: null }} />
-        <Tabs.Screen name="categories"   options={{ href: null }} />
-<Tabs.Screen name="popular"      options={{ href: null }} />
-        <Tabs.Screen name="game"         options={{ href: null }} />
-        <Tabs.Screen name="settings"     options={{ href: null }} />
-        <Tabs.Screen name="daily-dilemma" options={{ href: null }} />
-      </Tabs>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="popular" />
+        <Stack.Screen name="game" />
+        <Stack.Screen name="settings" />
+      </Stack>
     </>
   );
 }

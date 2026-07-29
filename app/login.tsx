@@ -94,7 +94,7 @@ export default function Login() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.replace("/profile");
+        router.replace("/");
       }
     } catch (err: any) {
       const msg = err.message || "Errore sconosciuto";
